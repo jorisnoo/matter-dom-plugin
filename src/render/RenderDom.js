@@ -1,25 +1,25 @@
-var RenderDom = {};
+let RenderDom = {};
 
 module.exports = function(Matter){
-    var Common = Matter.Common;
-    var Composite = Matter.Composite;
-    var Events = Matter.Events;
-    var Render = Matter.Render;
+    const Common = Matter.Common;
+    const Composite = Matter.Composite;
+    const Events = Matter.Events;
+    const Render = Matter.Render;
 
-    var _requestAnimationFrame,
+    let _requestAnimationFrame,
         _cancelAnimationFrame;
 
     if (typeof window !== 'undefined'){
         _requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame
                                     || window.mozRequestAnimationFrame || window.msRequestAnimationFrame
-                                    || function(callback){ window.setTimeout(function(){callback(Common.now())}, 1000 / 60);};
+                                    || function(callback){ window.setTimeout(function(){callback(Common.now());}, 1000 / 60);};
 
         _cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
                                     || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
     }
 
     RenderDom.create = function(options){
-        var defaults = {
+        let defaults = {
             engine: null,
             element: window,
             controller: RenderDom,
@@ -27,7 +27,7 @@ module.exports = function(Matter){
             options: {
 
             }
-        }
+        };
 
         /*
         try{
@@ -43,7 +43,7 @@ module.exports = function(Matter){
             return;
         }*/
 
-        var engine = options.engine;
+        let engine = options.engine;
 
         var render = Common.extend(defaults, options);
 
@@ -87,32 +87,32 @@ module.exports = function(Matter){
         };
 
 
-        var debugElement = document.querySelector('#debug');
+        const debugElement = document.querySelector('#debug');
 
         if (debugElement) {
-            debugElement.style.position = "absolute";
-            var debugRender = Render.create({
+            debugElement.style.position = 'absolute';
+            const debugRender = Render.create({
                 element: document.querySelector('#debug'),
                 engine: engine,
                 options: {
-                        width: render.mapping.WORLD.width,
-                        height: render.mapping.WORLD.height,
-                        background: '#fafafa',
-                        wireframeBackground: '#222',
-                        hasBounds: false,
-                        enabled: true,
-                        wireframes: true,
-                        showSleeping: true,
-                        showDebug: false,
-                        showBroadphase: false,
-                        showBounds: false,
-                        showVelocity: false,
-                        showCollisions: false,
-                        showAxes: false,
-                        showPositions: false,
-                        showAngleIndicator: false,
-                        showIds: false,
-                        showShadows: false
+                    width: render.mapping.WORLD.width,
+                    height: render.mapping.WORLD.height,
+                    background: '#fafafa',
+                    wireframeBackground: '#222',
+                    hasBounds: false,
+                    enabled: true,
+                    wireframes: true,
+                    showSleeping: true,
+                    showDebug: false,
+                    showBroadphase: false,
+                    showBounds: false,
+                    showVelocity: false,
+                    showCollisions: false,
+                    showAxes: false,
+                    showPositions: false,
+                    showAngleIndicator: false,
+                    showIds: false,
+                    showShadows: false
                 }
             });
 
@@ -122,28 +122,24 @@ module.exports = function(Matter){
         }
 
         return render;
-    }
+    };
 
     RenderDom.run = function(render){
-        (function loop(time){
+        (function loop(){
             render.frameRequestId = _requestAnimationFrame(loop);
             RenderDom.world(render);
         })();
-    }
+    };
 
     RenderDom.stop = function(render){
         _cancelAnimationFrame(render.frameRequestId);
-    }
+    };
 
     RenderDom.world = function(render){
-        var engine = render.engine,
-        world = engine.world,
-        allBodies = Composite.allBodies(world),
-        allConstraints = Composite.allConstraints(world),
-        domBodies = document.querySelectorAll('[matter]');
+        let engine = render.engine,
+            domBodies = document.querySelectorAll('[matter]');
 
-
-        var event = {
+        let event = {
             timestamp: engine.timing.timestamp
         };
 
@@ -151,42 +147,39 @@ module.exports = function(Matter){
 
         // TODO bounds if specified
         RenderDom.bodies(render, domBodies);
-    }
+    };
 
     /**
      * Map Dom view elements position to matter world bodys position
      */
-    RenderDom.bodies = function(render, bodies, context){
-        var c = context,
-            engine = render.engine,
+    RenderDom.bodies = function(render){
+        let engine = render.engine,
             world = engine.world,
-            options = render.options,
-            matterBodies = Composite.allBodies(world),
-            domBody;
+            matterBodies = Composite.allBodies(world);
 
-        for(var i=0; i<matterBodies.length; i++){
-            var matterBody = matterBodies[i];
+        for(let i=0; i<matterBodies.length; i++){
+            let matterBody = matterBodies[i];
 
-            for(var k=(matterBody.parts.length > 1) ? 1 : 0; k<matterBody.parts.length; k++){
-                var matterPart = matterBody.parts[k];
+            for(let k=(matterBody.parts.length > 1) ? 1 : 0; k<matterBody.parts.length; k++){
+                let matterPart = matterBody.parts[k];
 
 
                 if(matterPart.Dom && matterPart.Dom.element) {
-                    var domPart = matterPart.Dom.element;
+                    let domPart = matterPart.Dom.element;
 
-                    var bodyWorldPoint = render.mapping.worldToView({
+                    let bodyWorldPoint = render.mapping.worldToView({
                         x: matterPart.position.x,
                         y: matterPart.position.y
                     });
-                    var bodyViewOffset = {x: domPart.offsetWidth / 2, y: domPart.offsetHeight / 2};
-                    domPart.style.position = "absolute";
+                    let bodyViewOffset = {x: domPart.offsetWidth / 2, y: domPart.offsetHeight / 2};
+                    domPart.style.position = 'absolute';
                     domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${bodyWorldPoint.y - bodyViewOffset.y}px)`;
                     domPart.style.transform += `rotate(${matterBody.angle}rad)`;
                 }
 
             }
         }
-    }
+    };
 
     return RenderDom;
 };

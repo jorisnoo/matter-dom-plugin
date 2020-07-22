@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "eslint": "^7.5.0"
+  },
+  "dependencies": {
+    "matter-js": "^0.14.2"
   }
 }
