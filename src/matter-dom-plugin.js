@@ -1,9 +1,9 @@
-import Matter from 'matter-js';
-import RenderDom from './render/RenderDom.js';
-import DomBody from './body/DomBody.js';
-import DomBodies from './factory/DomBodies.js';
-import DomMouseConstraint from './constraint/DomMouseConstraint.js';
-import Engine from './core/Engine.js';
+const Matter = require('matter-js');
+const RenderDom = require('./render/RenderDom.js');
+const DomBody = require('./body/DomBody.js');
+const DomBodies = require('./factory/DomBodies.js');
+const DomMouseConstraint = require('./constraint/DomMouseConstraint.js');
+const Engine = require('./core/Engine.js');
 
 const MatterDomPlugin = {
     name: 'matter-dom-plugin',
