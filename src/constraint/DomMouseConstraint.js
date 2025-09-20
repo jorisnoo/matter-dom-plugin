@@ -1,5 +1,3 @@
-let DomMouseConstraint = {};
-
 export default function (Matter) {
     const Sleeping = Matter.Sleeping;
     const Mouse = Matter.Mouse;
@@ -8,6 +6,28 @@ export default function (Matter) {
     const Composite = Matter.Composite;
     const Common = Matter.Common;
     const Bounds = Matter.Bounds;
+
+    const DomMouseConstraint = {};
+
+    const _triggerEvents = function (mouseConstraint) {
+        const mouse = mouseConstraint.mouse;
+        const mouseEvents = mouse.sourceEvents;
+
+        if (mouseEvents.mousemove) {
+            Events.trigger(mouseConstraint, "mousemove", { mouse: mouse });
+        }
+
+        if (mouseEvents.mousedown) {
+            Events.trigger(mouseConstraint, "mousedown", { mouse: mouse });
+        }
+
+        if (mouseEvents.mouseup) {
+            Events.trigger(mouseConstraint, "mouseup", { mouse: mouse });
+        }
+
+        // reset the mouse state ready for the next step
+        Mouse.clearSourceEvents(mouse);
+    };
 
     DomMouseConstraint.create = function (engine, options) {
         let mouse =
@@ -112,26 +132,6 @@ export default function (Matter) {
                 });
             }
         }
-    };
-
-    const _triggerEvents = function (mouseConstraint) {
-        const mouse = mouseConstraint.mouse;
-        const mouseEvents = mouse.sourceEvents;
-
-        if (mouseEvents.mousemove) {
-            Events.trigger(mouseConstraint, "mousemove", { mouse: mouse });
-        }
-
-        if (mouseEvents.mousedown) {
-            Events.trigger(mouseConstraint, "mousedown", { mouse: mouse });
-        }
-
-        if (mouseEvents.mouseup) {
-            Events.trigger(mouseConstraint, "mouseup", { mouse: mouse });
-        }
-
-        // reset the mouse state ready for the next step
-        Mouse.clearSourceEvents(mouse);
     };
 
     return DomMouseConstraint;

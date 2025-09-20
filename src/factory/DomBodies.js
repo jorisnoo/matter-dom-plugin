@@ -1,11 +1,11 @@
-let DomBodies = {};
-
 export default function (Matter) {
     const Bodies = Matter.Bodies;
     const DomBody = Matter.DomBody;
     const Vertices = Matter.Vertices;
     const Common = Matter.Common;
-    const World = Matter.World;
+    const Composite = Matter.Composite;
+
+    const DomBodies = {};
 
     DomBodies.create = function (options) {
         const bodyType = options.bodyType; // Required
@@ -54,7 +54,13 @@ export default function (Matter) {
         }
 
         if (worldBody) {
-            World.add(render.engine.world, [worldBody]);
+            // Set the Dom property to link the body with its DOM element
+            worldBody.Dom = {
+                element: domBody,
+                render: render,
+            };
+
+            Composite.add(render.engine.world, [worldBody]);
         }
 
         return worldBody;
@@ -141,9 +147,7 @@ export default function (Matter) {
             delete options.chamfer;
         }
 
-        const body = DomBody.create(Common.extend({}, block, options));
-
-        return body;
+        return DomBody.create(Common.extend({}, block, options));
     };
 
     DomBodies.circle = function (x, y, radius, options, maxSides) {

@@ -1,31 +1,10 @@
-let RenderDom = {};
-
 export default function (Matter) {
     const Common = Matter.Common;
     const Composite = Matter.Composite;
     const Events = Matter.Events;
     const Render = Matter.Render;
 
-    let _requestAnimationFrame, _cancelAnimationFrame;
-
-    if (typeof window !== "undefined") {
-        _requestAnimationFrame =
-            window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            window.msRequestAnimationFrame ||
-            function (callback) {
-                window.setTimeout(function () {
-                    callback(Common.now());
-                }, 1000 / 60);
-            };
-
-        _cancelAnimationFrame =
-            window.cancelAnimationFrame ||
-            window.mozCancelAnimationFrame ||
-            window.webkitCancelAnimationFrame ||
-            window.msCancelAnimationFrame;
-    }
+    const RenderDom = {};
 
     RenderDom.create = function (options) {
         const defaults = {
@@ -117,14 +96,15 @@ export default function (Matter) {
     };
 
     RenderDom.run = function (render) {
+        const self = RenderDom;
         (function loop() {
-            render.frameRequestId = _requestAnimationFrame(loop);
-            RenderDom.world(render);
+            render.frameRequestId = requestAnimationFrame(loop);
+            self.world(render);
         })();
     };
 
     RenderDom.stop = function (render) {
-        _cancelAnimationFrame(render.frameRequestId);
+        cancelAnimationFrame(render.frameRequestId);
     };
 
     RenderDom.world = function (render) {
@@ -151,29 +131,49 @@ export default function (Matter) {
         for (let i = 0; i < matterBodies.length; i++) {
             const matterBody = matterBodies[i];
 
-            for (
-                let k = matterBody.parts.length > 1 ? 1 : 0;
-                k < matterBody.parts.length;
-                k++
-            ) {
-                const matterPart = matterBody.parts[k];
+            // Check if the body itself has Dom property (for simple bodies)
+            if (matterBody.Dom && matterBody.Dom.element) {
+                const domElement = matterBody.Dom.element;
 
-                if (matterPart.Dom && matterPart.Dom.element) {
-                    const domPart = matterPart.Dom.element;
+                const bodyWorldPoint = render.mapping.worldToView({
+                    x: matterBody.position.x,
+                    y: matterBody.position.y,
+                });
+                const bodyViewOffset = {
+                    x: domElement.offsetWidth / 2,
+                    y: domElement.offsetHeight / 2,
+                };
+                domElement.style.position = "absolute";
+                domElement.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
+                    bodyWorldPoint.y - bodyViewOffset.y
+                }px)`;
+                domElement.style.transform += `rotate(${matterBody.angle}rad)`;
+            } else {
+                // Check parts for composite bodies
+                for (
+                    let k = matterBody.parts.length > 1 ? 1 : 0;
+                    k < matterBody.parts.length;
+                    k++
+                ) {
+                    const matterPart = matterBody.parts[k];
 
-                    const bodyWorldPoint = render.mapping.worldToView({
-                        x: matterPart.position.x,
-                        y: matterPart.position.y,
-                    });
-                    const bodyViewOffset = {
-                        x: domPart.offsetWidth / 2,
-                        y: domPart.offsetHeight / 2,
-                    };
-                    domPart.style.position = "absolute";
-                    domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
-                        bodyWorldPoint.y - bodyViewOffset.y
-                    }px)`;
-                    domPart.style.transform += `rotate(${matterBody.angle}rad)`;
+                    if (matterPart.Dom && matterPart.Dom.element) {
+                        const domPart = matterPart.Dom.element;
+
+                        const bodyWorldPoint = render.mapping.worldToView({
+                            x: matterPart.position.x,
+                            y: matterPart.position.y,
+                        });
+                        const bodyViewOffset = {
+                            x: domPart.offsetWidth / 2,
+                            y: domPart.offsetHeight / 2,
+                        };
+                        domPart.style.position = "absolute";
+                        domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
+                            bodyWorldPoint.y - bodyViewOffset.y
+                        }px)`;
+                        domPart.style.transform += `rotate(${matterBody.angle}rad)`;
+                    }
                 }
             }
         }
