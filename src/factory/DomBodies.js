@@ -22,9 +22,12 @@ export default function (Matter) {
         let worldBody = null;
         const domBody = document.querySelector(el);
 
-        const positionInWorld = render.mapping.viewToWorld({ x: position.x, y: position.y });
+        const positionInWorld = render.mapping.viewToWorld({
+            x: position.x,
+            y: position.y,
+        });
 
-        if (bodyType === 'block') {
+        if (bodyType === "block") {
             const blockDimensionsInWorld = render.mapping.viewToWorld({
                 x: domBody.offsetWidth,
                 y: domBody.offsetHeight,
@@ -35,16 +38,18 @@ export default function (Matter) {
                 positionInWorld.y,
                 blockDimensionsInWorld.x,
                 blockDimensionsInWorld.y,
-                options
+                options,
             );
-        } else if (bodyType === 'circle') {
-            const circleRadiusInWorld = render.mapping.viewToWorld(domBody.offsetWidth / 2);
+        } else if (bodyType === "circle") {
+            const circleRadiusInWorld = render.mapping.viewToWorld(
+                domBody.offsetWidth / 2,
+            );
 
             worldBody = DomBodies.circle(
                 positionInWorld.x,
                 positionInWorld.y,
                 circleRadiusInWorld,
-                options
+                options,
             );
         }
 
@@ -59,10 +64,17 @@ export default function (Matter) {
         options = options || {};
 
         const block = {
-            label: 'Block Body',
+            label: "Block Body",
             position: { x: x, y: y },
             vertices: Vertices.fromPath(
-                'L 0 0 L ' + width + ' 0 L ' + width + ' ' + height + ' L 0 ' + height
+                "L 0 0 L " +
+                    width +
+                    " 0 L " +
+                    width +
+                    " " +
+                    height +
+                    " L 0 " +
+                    height,
             ),
         };
 
@@ -73,7 +85,7 @@ export default function (Matter) {
                 chamfer.radius,
                 chamfer.quality,
                 chamfer.qualityMin,
-                chamfer.qualityMax
+                chamfer.qualityMax,
             );
             delete options.chamfer;
         }
@@ -103,17 +115,17 @@ export default function (Matter) {
         });
 
         const block = {
-            label: 'DOM Block Body',
+            label: "DOM Block Body",
             position: { x: positionInWorld.x, y: positionInWorld.y },
             vertices: Vertices.fromPath(
-                'L 0 0 L ' +
+                "L 0 0 L " +
                     elementDimensionsInWorld.x +
-                    ' 0 L ' +
+                    " 0 L " +
                     elementDimensionsInWorld.x +
-                    ' ' +
+                    " " +
                     elementDimensionsInWorld.y +
-                    ' L 0 ' +
-                    elementDimensionsInWorld.y
+                    " L 0 " +
+                    elementDimensionsInWorld.y,
             ),
         };
 
@@ -124,7 +136,7 @@ export default function (Matter) {
                 chamfer.radius,
                 chamfer.quality,
                 chamfer.qualityMin,
-                chamfer.qualityMax
+                chamfer.qualityMax,
             );
             delete options.chamfer;
         }
@@ -138,7 +150,7 @@ export default function (Matter) {
         options = options || {};
 
         const circle = {
-            label: 'Circle Body',
+            label: "Circle Body",
             circleRadius: radius,
         };
 
@@ -151,7 +163,13 @@ export default function (Matter) {
             sides += 1;
         }
 
-        return DomBodies.polygon(x, y, sides, radius, Common.extend({}, circle, options));
+        return DomBodies.polygon(
+            x,
+            y,
+            sides,
+            radius,
+            Common.extend({}, circle, options),
+        );
     };
 
     DomBodies.polygon = function (x, y, sides, radius, options) {
@@ -162,7 +180,7 @@ export default function (Matter) {
         }
 
         const theta = (2 * Math.PI) / sides;
-        let path = '';
+        let path = "";
         const offset = theta * 0.5;
 
         for (let i = 0; i < sides; i += 1) {
@@ -170,11 +188,11 @@ export default function (Matter) {
             const xx = Math.cos(angle) * radius;
             const yy = Math.sin(angle) * radius;
 
-            path += 'L ' + xx.toFixed(3) + ' ' + yy.toFixed(3) + ' ';
+            path += "L " + xx.toFixed(3) + " " + yy.toFixed(3) + " ";
         }
 
         const polygon = {
-            label: 'Polygon Body',
+            label: "Polygon Body",
             position: { x: x, y: y },
             vertices: Vertices.fromPath(path),
         };
@@ -186,7 +204,7 @@ export default function (Matter) {
                 chamfer.radius,
                 chamfer.quality,
                 chamfer.qualityMin,
-                chamfer.qualityMax
+                chamfer.qualityMax,
             );
             delete options.chamfer;
         }

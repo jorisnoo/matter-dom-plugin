@@ -8,7 +8,7 @@ export default function (Matter) {
 
     let _requestAnimationFrame, _cancelAnimationFrame;
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
         _requestAnimationFrame =
             window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
@@ -59,7 +59,7 @@ export default function (Matter) {
             y: render.mapping.WORLD.height / 2,
         };
         render.mapping.viewToWorld = function (value) {
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
                 return {
                     x: render.mapping.ratioMultiplier * value.x,
                     y: render.mapping.ratioMultiplier * value.y,
@@ -69,7 +69,7 @@ export default function (Matter) {
             }
         };
         render.mapping.worldToView = function (value) {
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
                 return {
                     x: value.x / render.mapping.ratioMultiplier,
                     y: value.y / render.mapping.ratioMultiplier,
@@ -79,18 +79,18 @@ export default function (Matter) {
             }
         };
 
-        const debugElement = document.querySelector('#debug');
+        const debugElement = document.querySelector("#debug");
 
         if (debugElement) {
-            debugElement.style.position = 'absolute';
+            debugElement.style.position = "absolute";
             const debugRender = Render.create({
-                element: document.querySelector('#debug'),
+                element: document.querySelector("#debug"),
                 engine: engine,
                 options: {
                     width: render.mapping.WORLD.width,
                     height: render.mapping.WORLD.height,
-                    background: '#fafafa',
-                    wireframeBackground: '#222',
+                    background: "#fafafa",
+                    wireframeBackground: "#222",
                     hasBounds: false,
                     enabled: true,
                     wireframes: true,
@@ -129,13 +129,13 @@ export default function (Matter) {
 
     RenderDom.world = function (render) {
         const engine = render.engine;
-        const domBodies = document.querySelectorAll('[matter]');
+        const domBodies = document.querySelectorAll("[matter]");
 
         const event = {
             timestamp: engine.timing.timestamp,
         };
 
-        Events.trigger(render, 'beforeRender', event);
+        Events.trigger(render, "beforeRender", event);
 
         RenderDom.bodies(render, domBodies);
     };
@@ -151,7 +151,11 @@ export default function (Matter) {
         for (let i = 0; i < matterBodies.length; i++) {
             const matterBody = matterBodies[i];
 
-            for (let k = matterBody.parts.length > 1 ? 1 : 0; k < matterBody.parts.length; k++) {
+            for (
+                let k = matterBody.parts.length > 1 ? 1 : 0;
+                k < matterBody.parts.length;
+                k++
+            ) {
                 const matterPart = matterBody.parts[k];
 
                 if (matterPart.Dom && matterPart.Dom.element) {
@@ -165,7 +169,7 @@ export default function (Matter) {
                         x: domPart.offsetWidth / 2,
                         y: domPart.offsetHeight / 2,
                     };
-                    domPart.style.position = 'absolute';
+                    domPart.style.position = "absolute";
                     domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
                         bodyWorldPoint.y - bodyViewOffset.y
                     }px)`;
