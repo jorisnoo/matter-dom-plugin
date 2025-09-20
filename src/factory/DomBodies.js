@@ -1,6 +1,6 @@
 let DomBodies = {};
 
-module.exports = function(Matter){
+export default function(Matter){
     const Bodies = Matter.Bodies;
     const DomBody = Matter.DomBody;
     const Vertices = Matter.Vertices;
@@ -178,4 +178,4 @@ module.exports = function(Matter){
     };
 
     return DomBodies;
-};
+}

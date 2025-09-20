@@ -1,6 +1,6 @@
 let RenderDom = {};
 
-module.exports = function(Matter){
+export default function(Matter){
     const Common = Matter.Common;
     const Composite = Matter.Composite;
     const Events = Matter.Events;
@@ -182,4 +182,4 @@ module.exports = function(Matter){
     };
 
     return RenderDom;
-};
+}

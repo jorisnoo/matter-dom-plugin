@@ -1,6 +1,6 @@
 let DomBody = {};
 
-module.exports = function(Matter){
+export default function(Matter){
     const Common = Matter.Common;
     const Body = Matter.Body;
 
@@ -35,4 +35,4 @@ module.exports = function(Matter){
     };
 
     return DomBody;
-};
+}

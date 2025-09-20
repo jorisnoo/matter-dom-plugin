@@ -1,4 +1,4 @@
-module.exports = function(Matter){
+export default function(Matter){
 
     // Patch Engine
     const Composite = Matter.Composite;
@@ -32,4 +32,4 @@ module.exports = function(Matter){
         _bodiesUpdate(allBodies, delta, timing.timeScale, correction, world.bounds);
         return engine;
     };
-};
+}

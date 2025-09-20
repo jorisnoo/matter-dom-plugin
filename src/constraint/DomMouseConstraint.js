@@ -1,6 +1,6 @@
 let DomMouseConstraint = {};
 
-module.exports = function (Matter) {
+export default function (Matter) {
     const Sleeping = Matter.Sleeping;
     const Mouse = Matter.Mouse;
     const Events = Matter.Events;
@@ -122,4 +122,4 @@ module.exports = function (Matter) {
 
 
     return DomMouseConstraint;
-};
+}

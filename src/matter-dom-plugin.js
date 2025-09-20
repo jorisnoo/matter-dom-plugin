@@ -1,9 +1,9 @@
-const Matter = require('matter-js');
-const RenderDom = require('./render/RenderDom.js');
-const DomBody = require('./body/DomBody.js');
-const DomBodies = require('./factory/DomBodies.js');
-const DomMouseConstraint = require('./constraint/DomMouseConstraint.js');
-const Engine = require('./core/Engine.js');
+import Matter from 'matter-js';
+import RenderDom from './render/RenderDom.js';
+import DomBody from './body/DomBody.js';
+import DomBodies from './factory/DomBodies.js';
+import DomMouseConstraint from './constraint/DomMouseConstraint.js';
+import Engine from './core/Engine.js';
 
 const MatterDomPlugin = {
     name: 'matter-dom-plugin',
@@ -17,7 +17,7 @@ const MatterDomPlugin = {
         MatterDomPlugin.installEngine(matter);
     },
     installRenderDom: function (matter) {
-        // console.log("Installing RenderDom module.");
+        console.log("Installing RenderDom module.");
         matter.RenderDom = RenderDom(matter);
     },
     installDomBodies: function (matter) {
@@ -41,4 +41,4 @@ const MatterDomPlugin = {
 
 Matter.Plugin.register(MatterDomPlugin);
 
-module.exports.MatterDomPlugin = MatterDomPlugin;
+export { MatterDomPlugin };
