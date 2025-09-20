@@ -1,36 +1,34 @@
 let DomBody = {};
 
-export default function(Matter){
+export default function (Matter) {
     const Common = Matter.Common;
     const Body = Matter.Body;
 
     // Extend Body
     DomBody = Common.clone(Body, true);
 
-    DomBody.create = function(){
+    DomBody.create = function () {
         const body = Body.create.apply(null, arguments);
-
-        //body.Dom.element.setAttribute('matter-id', body.id);
         return body;
     };
 
-    DomBody.setVertices = function(){
+    DomBody.setVertices = function () {
         Body.setVertices.apply(null, arguments);
     };
 
-    DomBody.setPosition = function(){
+    DomBody.setPosition = function () {
         Body.setPosition.apply(null, arguments);
     };
 
-    DomBody.setAngle = function(){
+    DomBody.setAngle = function () {
         Body.setAngle.apply(null, arguments);
     };
 
-    DomBody.scale = function(){
+    DomBody.scale = function () {
         Body.scale.apply(null, arguments);
     };
 
-    DomBody.update = function(){
+    DomBody.update = function () {
         Body.update.apply(null, arguments);
     };
 

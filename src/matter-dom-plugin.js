@@ -1,4 +1,3 @@
-// Import Matter.js (CommonJS module)
 import Matter from 'matter-js';
 import RenderDom from './render/RenderDom.js';
 import DomBody from './body/DomBody.js';
@@ -13,32 +12,26 @@ const MatterDomPlugin = {
     install: function (matter) {
         MatterDomPlugin.installRenderDom(matter);
         MatterDomPlugin.installDomBody(matter);
-        MatterDomPlugin.installDomBodies(matter); // Depends on DomBody
+        MatterDomPlugin.installDomBodies(matter);
         MatterDomPlugin.installDomMouseConstraint(matter);
         MatterDomPlugin.installEngine(matter);
     },
     installRenderDom: function (matter) {
-        console.log("Installing RenderDom module.");
         matter.RenderDom = RenderDom(matter);
     },
     installDomBodies: function (matter) {
-        // console.log("Installing DomBodies module.");
         matter.DomBodies = DomBodies(matter);
     },
     installDomMouseConstraint: function (matter) {
-        // console.log("Installing DomMouseConstraint.");
         matter.DomMouseConstraint = DomMouseConstraint(matter);
     },
     installDomBody: function (matter) {
-        // console.log("Installing DomBody updates.");
         matter.DomBody = DomBody(matter);
     },
     installEngine: function (matter) {
-        // console.log("Patching Engine.");
         Engine(matter);
-    }
+    },
 };
-
 
 // Only register if Matter.Plugin is available
 if (Matter && Matter.Plugin) {
