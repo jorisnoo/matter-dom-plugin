@@ -1,135 +1,161 @@
-let DomBodies = {};
-
-module.exports = function(Matter){
+export default function (Matter) {
     const Bodies = Matter.Bodies;
     const DomBody = Matter.DomBody;
     const Vertices = Matter.Vertices;
     const Common = Matter.Common;
-    const World = Matter.World;
+    const Composite = Matter.Composite;
 
-    DomBodies.create = function(options){
-        let bodyType = options.bodyType; // Required
-        let el = options.el; // Required
-        let render = options.render; // Required
-        let position = options.position; // Required
+    const DomBodies = {};
+
+    DomBodies.create = function (options) {
+        const bodyType = options.bodyType; // Required
+        const el = options.el; // Required
+        const render = options.render; // Required
+        const position = options.position; // Required
 
         delete options.bodyType;
-        //delete options.el;
         delete options.render;
         delete options.position;
 
         options.domRenderer = render;
 
-        /*
-        options.Dom = {
-            render: render,
-            element: null
-        }
-        */
-
         let worldBody = null;
-        let domBody = document.querySelector(el);
+        const domBody = document.querySelector(el);
 
-        let positionInWorld = render.mapping.viewToWorld({x: position.x, y: position.y});
-        if(bodyType === 'block'){
-            let blockDimensionsInWorld = render.mapping.viewToWorld({
+        const positionInWorld = render.mapping.viewToWorld({
+            x: position.x,
+            y: position.y,
+        });
+
+        if (bodyType === "block") {
+            const blockDimensionsInWorld = render.mapping.viewToWorld({
                 x: domBody.offsetWidth,
-                y: domBody.offsetHeight
+                y: domBody.offsetHeight,
             });
-            //console.log("One block, please!")
+
             worldBody = DomBodies.OGblock(
                 positionInWorld.x,
                 positionInWorld.y,
                 blockDimensionsInWorld.x,
                 blockDimensionsInWorld.y,
-                options
+                options,
             );
-        }else if(bodyType === 'circle'){
-            let circleRadiusInWorld = render.mapping.viewToWorld(domBody.offsetWidth/2);
-            //console.log("One circle, please!");
+        } else if (bodyType === "circle") {
+            const circleRadiusInWorld = render.mapping.viewToWorld(
+                domBody.offsetWidth / 2,
+            );
+
             worldBody = DomBodies.circle(
                 positionInWorld.x,
                 positionInWorld.y,
                 circleRadiusInWorld,
-                options
+                options,
             );
         }
 
-        if(worldBody){
-            // TODO TEST THIS!!
-            //domBody.setAttribute('matter-id', worldBody.id);
-            World.add(render.engine.world, [worldBody]);
+        if (worldBody) {
+            // Set the Dom property to link the body with its DOM element
+            worldBody.Dom = {
+                element: domBody,
+                render: render,
+            };
+
+            Composite.add(render.engine.world, [worldBody]);
         }
 
         return worldBody;
     };
 
-    DomBodies.OGblock = function(x, y, width, height, options){
+    DomBodies.OGblock = function (x, y, width, height, options) {
         options = options || {};
 
-        let block = {
-            label: 'Block Body',
-            position: {x: x, y: y},
-            vertices: Vertices.fromPath('L 0 0 L ' + width + ' 0 L ' + width + ' ' + height + ' L 0 ' + height)
+        const block = {
+            label: "Block Body",
+            position: { x: x, y: y },
+            vertices: Vertices.fromPath(
+                "L 0 0 L " +
+                    width +
+                    " 0 L " +
+                    width +
+                    " " +
+                    height +
+                    " L 0 " +
+                    height,
+            ),
         };
 
-        if(options.chamfer){
-            let chamfer = options.chamfer;
-            block.vertices = Vertices.chamfer(block.vertices, chamfer.radius,
-                chamfer.quality, chamfer.qualityMin, chamfer.qualityMax);
+        if (options.chamfer) {
+            const chamfer = options.chamfer;
+            block.vertices = Vertices.chamfer(
+                block.vertices,
+                chamfer.radius,
+                chamfer.quality,
+                chamfer.qualityMin,
+                chamfer.qualityMax,
+            );
             delete options.chamfer;
         }
         return DomBody.create(Common.extend({}, block, options));
     };
 
-    DomBodies.block = function(x, y, options){
-        let defaults = {
+    DomBodies.block = function (x, y, options) {
+        const defaults = {
             Dom: {
                 element: null,
-                render: null
-            }
+                render: null,
+            },
         };
         options = options || {};
         options = Common.extend(defaults, options);
 
-
-        let render = options.Dom.render;
-        let element = options.Dom.element;
-        let positionInWorld = render.mapping.viewToWorld({
+        const render = options.Dom.render;
+        const element = options.Dom.element;
+        const positionInWorld = render.mapping.viewToWorld({
             x: x,
-            y: y
+            y: y,
         });
 
-        let elementDimensionsInWorld = render.mapping.viewToWorld({
+        const elementDimensionsInWorld = render.mapping.viewToWorld({
             x: element.offsetWidth,
-            y: element.offsetHeight
+            y: element.offsetHeight,
         });
 
-        let block = {
-            label: 'DOM Block Body',
-            position: {x: positionInWorld.x, y: positionInWorld.y},
-            vertices: Vertices.fromPath('L 0 0 L ' + elementDimensionsInWorld.x + ' 0 L ' + elementDimensionsInWorld.x + ' ' + elementDimensionsInWorld.y + ' L 0 ' + elementDimensionsInWorld.y)
+        const block = {
+            label: "DOM Block Body",
+            position: { x: positionInWorld.x, y: positionInWorld.y },
+            vertices: Vertices.fromPath(
+                "L 0 0 L " +
+                    elementDimensionsInWorld.x +
+                    " 0 L " +
+                    elementDimensionsInWorld.x +
+                    " " +
+                    elementDimensionsInWorld.y +
+                    " L 0 " +
+                    elementDimensionsInWorld.y,
+            ),
         };
 
-        if(options.chamfer){
-            let chamfer = options.chamfer;
-            block.vertices = Vertices.chamfer(block.vertices, chamfer.radius,
-                chamfer.quality, chamfer.qualityMin, chamfer.qualityMax);
+        if (options.chamfer) {
+            const chamfer = options.chamfer;
+            block.vertices = Vertices.chamfer(
+                block.vertices,
+                chamfer.radius,
+                chamfer.quality,
+                chamfer.qualityMin,
+                chamfer.qualityMax,
+            );
             delete options.chamfer;
         }
 
-        let body = DomBody.create(Common.extend({}, block, options));
-        //element.setAttribute('matter-id', body.id);
-
-        return body;
+        return DomBody.create(Common.extend({}, block, options));
     };
 
-    DomBodies.circle = function(x, y, radius, options, maxSides){
+    DomBodies.circle = function (x, y, radius, options, maxSides) {
         options = options || {};
 
-        let circle = {
-            label: 'Circle Body',
-            circleRadius: radius
+        const circle = {
+            label: "Circle Body",
+            circleRadius: radius,
         };
 
         // approximate circles with polygons until true circles implemented in SAT
@@ -137,40 +163,53 @@ module.exports = function(Matter){
         let sides = Math.ceil(Math.max(10, Math.min(maxSides, radius)));
 
         // optimisation: always use even number of sides (half the number of unique axes)
-        if(sides % 2 === 1)
+        if (sides % 2 === 1) {
             sides += 1;
-
-        return DomBodies.polygon(x, y, sides, radius, Common.extend({}, circle, options));
-    };
-
-    DomBodies.polygon = function(x, y, sides, radius, options){
-        options = options || {};
-
-        if (sides < 3)
-            return Bodies.circle(x, y, radius, options);
-
-        let theta = 2 * Math.PI / sides,
-            path = '',
-            offset = theta * 0.5;
-
-        for (let i = 0; i < sides; i += 1) {
-            let angle = offset + (i * theta),
-                xx = Math.cos(angle) * radius,
-                yy = Math.sin(angle) * radius;
-
-            path += 'L ' + xx.toFixed(3) + ' ' + yy.toFixed(3) + ' ';
         }
 
-        let polygon = {
-            label: 'Polygon Body',
+        return DomBodies.polygon(
+            x,
+            y,
+            sides,
+            radius,
+            Common.extend({}, circle, options),
+        );
+    };
+
+    DomBodies.polygon = function (x, y, sides, radius, options) {
+        options = options || {};
+
+        if (sides < 3) {
+            return Bodies.circle(x, y, radius, options);
+        }
+
+        const theta = (2 * Math.PI) / sides;
+        let path = "";
+        const offset = theta * 0.5;
+
+        for (let i = 0; i < sides; i += 1) {
+            const angle = offset + i * theta;
+            const xx = Math.cos(angle) * radius;
+            const yy = Math.sin(angle) * radius;
+
+            path += "L " + xx.toFixed(3) + " " + yy.toFixed(3) + " ";
+        }
+
+        const polygon = {
+            label: "Polygon Body",
             position: { x: x, y: y },
-            vertices: Vertices.fromPath(path)
+            vertices: Vertices.fromPath(path),
         };
 
         if (options.chamfer) {
-            let chamfer = options.chamfer;
-            polygon.vertices = Vertices.chamfer(polygon.vertices, chamfer.radius,
-                chamfer.quality, chamfer.qualityMin, chamfer.qualityMax);
+            const chamfer = options.chamfer;
+            polygon.vertices = Vertices.chamfer(
+                polygon.vertices,
+                chamfer.radius,
+                chamfer.quality,
+                chamfer.qualityMin,
+                chamfer.qualityMax,
+            );
             delete options.chamfer;
         }
 
@@ -178,4 +217,4 @@ module.exports = function(Matter){
     };
 
     return DomBodies;
-};
+}

@@ -10,6 +10,7 @@ The matter-dom-plugin aims to bring dom rendering for the Matterjs physics engin
 - DOM bodies (declarative HTML)
 - Mouse constraint for DOM
 - Dom body composites
+- Compatible with Matter.js 0.17.1 to 0.20.0
 
 ## Install
 
@@ -18,6 +19,20 @@ The matter-dom-plugin aims to bring dom rendering for the Matterjs physics engin
 ```
 
 See matter.js on [using plugins](https://github.com/liabru/matter-js/wiki/Using-plugins)
+
+## Running Tests
+
+Due to browser security restrictions with ES6 modules, you need to run a local server:
+
+```bash
+# Using npm (Node.js server)
+npm run serve
+# Then open http://localhost:8080
+
+# Or using Python
+./serve.sh
+# Then open http://localhost:8000
+```
 
 ## Usage
 

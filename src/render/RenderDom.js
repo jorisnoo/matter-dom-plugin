@@ -1,104 +1,75 @@
-let RenderDom = {};
-
-module.exports = function(Matter){
+export default function (Matter) {
     const Common = Matter.Common;
     const Composite = Matter.Composite;
     const Events = Matter.Events;
     const Render = Matter.Render;
 
-    let _requestAnimationFrame,
-        _cancelAnimationFrame;
+    const RenderDom = {};
 
-    if (typeof window !== 'undefined'){
-        _requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame
-                                    || window.mozRequestAnimationFrame || window.msRequestAnimationFrame
-                                    || function(callback){ window.setTimeout(function(){callback(Common.now());}, 1000 / 60);};
-
-        _cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
-                                    || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
-    }
-
-    RenderDom.create = function(options){
-        let defaults = {
+    RenderDom.create = function (options) {
+        const defaults = {
             engine: null,
             element: window,
             controller: RenderDom,
             frameRequestId: null,
-            options: {
-
-            }
+            options: {},
         };
 
-        /*
-        try{
-            if(!options){
-                throw (new Error('No engine was specified. Create an options object and specify the engine with the engine property.'));
-            }
+        const engine = options.engine;
 
-            if(!options.engine){
-                throw (new Error('No engine was specified. Create an options object and specify the engine with the engine property.'));
-            }
-        }catch(e){
-            console.log(`${e.name}: ${e.message}`);
-            return;
-        }*/
-
-        let engine = options.engine;
-
-        var render = Common.extend(defaults, options);
+        const render = Common.extend(defaults, options);
 
         render.mapping = {};
-        render.mapping.ratioMultiplier = 1/6; // VIEW is base ratio. Mapping to World.
+        render.mapping.ratioMultiplier = 1 / 6; // VIEW is base ratio. Mapping to World.
         render.mapping.VIEW = {
             width: window.innerWidth,
-            height: window.innerHeight
+            height: window.innerHeight,
         };
         render.mapping.VIEW.center = {
-            x: render.mapping.VIEW.width/2,
-            y: render.mapping.VIEW.height/2
+            x: render.mapping.VIEW.width / 2,
+            y: render.mapping.VIEW.height / 2,
         };
         render.mapping.WORLD = {
             width: render.mapping.VIEW.width * render.mapping.ratioMultiplier,
             height: render.mapping.VIEW.height * render.mapping.ratioMultiplier,
         };
         render.mapping.WORLD.center = {
-            x: render.mapping.WORLD.width/2,
-            y: render.mapping.WORLD.height/2
+            x: render.mapping.WORLD.width / 2,
+            y: render.mapping.WORLD.height / 2,
         };
-        render.mapping.viewToWorld = function(value){
-            if( typeof value === 'object' &&  value !== null ){
+        render.mapping.viewToWorld = function (value) {
+            if (typeof value === "object" && value !== null) {
                 return {
                     x: render.mapping.ratioMultiplier * value.x,
-                    y: render.mapping.ratioMultiplier * value.y
+                    y: render.mapping.ratioMultiplier * value.y,
                 };
-            }else{
+            } else {
                 return render.mapping.ratioMultiplier * value;
             }
         };
-        render.mapping.worldToView = function(value){
-            if( typeof value === 'object' &&  value !== null ){
+        render.mapping.worldToView = function (value) {
+            if (typeof value === "object" && value !== null) {
                 return {
-                    x: value.x/render.mapping.ratioMultiplier,
-                    y: value.y/render.mapping.ratioMultiplier
+                    x: value.x / render.mapping.ratioMultiplier,
+                    y: value.y / render.mapping.ratioMultiplier,
                 };
-            }else{
-                return value/render.mapping.ratioMultiplier;
+            } else {
+                return value / render.mapping.ratioMultiplier;
             }
         };
 
-
-        const debugElement = document.querySelector('#debug');
+        const debugElement = document.querySelector("#debug");
 
         if (debugElement) {
-            debugElement.style.position = 'absolute';
+            debugElement.style.position = "absolute";
             const debugRender = Render.create({
-                element: document.querySelector('#debug'),
+                element: document.querySelector("#debug"),
                 engine: engine,
                 options: {
                     width: render.mapping.WORLD.width,
                     height: render.mapping.WORLD.height,
-                    background: '#fafafa',
-                    wireframeBackground: '#222',
+                    background: "#fafafa",
+                    wireframeBackground: "#222",
                     hasBounds: false,
                     enabled: true,
                     wireframes: true,
@@ -112,8 +83,8 @@ module.exports = function(Matter){
                     showPositions: false,
                     showAngleIndicator: false,
                     showIds: false,
-                    showShadows: false
-                }
+                    showShadows: false,
+                },
             });
 
             Render.run(debugRender);
@@ -124,62 +95,89 @@ module.exports = function(Matter){
         return render;
     };
 
-    RenderDom.run = function(render){
-        (function loop(){
-            render.frameRequestId = _requestAnimationFrame(loop);
-            RenderDom.world(render);
+    RenderDom.run = function (render) {
+        const self = RenderDom;
+        (function loop() {
+            render.frameRequestId = requestAnimationFrame(loop);
+            self.world(render);
         })();
     };
 
-    RenderDom.stop = function(render){
-        _cancelAnimationFrame(render.frameRequestId);
+    RenderDom.stop = function (render) {
+        cancelAnimationFrame(render.frameRequestId);
     };
 
-    RenderDom.world = function(render){
-        let engine = render.engine,
-            domBodies = document.querySelectorAll('[matter]');
+    RenderDom.world = function (render) {
+        const engine = render.engine;
+        const domBodies = document.querySelectorAll("[matter]");
 
-        let event = {
-            timestamp: engine.timing.timestamp
+        const event = {
+            timestamp: engine.timing.timestamp,
         };
 
-        Events.trigger(render, 'beforeRender', event);
+        Events.trigger(render, "beforeRender", event);
 
-        // TODO bounds if specified
         RenderDom.bodies(render, domBodies);
     };
 
     /**
      * Map Dom view elements position to matter world bodys position
      */
-    RenderDom.bodies = function(render){
-        let engine = render.engine,
-            world = engine.world,
-            matterBodies = Composite.allBodies(world);
+    RenderDom.bodies = function (render) {
+        const engine = render.engine;
+        const world = engine.world;
+        const matterBodies = Composite.allBodies(world);
 
-        for(let i=0; i<matterBodies.length; i++){
-            let matterBody = matterBodies[i];
+        for (let i = 0; i < matterBodies.length; i++) {
+            const matterBody = matterBodies[i];
 
-            for(let k=(matterBody.parts.length > 1) ? 1 : 0; k<matterBody.parts.length; k++){
-                let matterPart = matterBody.parts[k];
+            // Check if the body itself has Dom property (for simple bodies)
+            if (matterBody.Dom && matterBody.Dom.element) {
+                const domElement = matterBody.Dom.element;
 
+                const bodyWorldPoint = render.mapping.worldToView({
+                    x: matterBody.position.x,
+                    y: matterBody.position.y,
+                });
+                const bodyViewOffset = {
+                    x: domElement.offsetWidth / 2,
+                    y: domElement.offsetHeight / 2,
+                };
+                domElement.style.position = "absolute";
+                domElement.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
+                    bodyWorldPoint.y - bodyViewOffset.y
+                }px)`;
+                domElement.style.transform += `rotate(${matterBody.angle}rad)`;
+            } else {
+                // Check parts for composite bodies
+                for (
+                    let k = matterBody.parts.length > 1 ? 1 : 0;
+                    k < matterBody.parts.length;
+                    k++
+                ) {
+                    const matterPart = matterBody.parts[k];
 
-                if(matterPart.Dom && matterPart.Dom.element) {
-                    let domPart = matterPart.Dom.element;
+                    if (matterPart.Dom && matterPart.Dom.element) {
+                        const domPart = matterPart.Dom.element;
 
-                    let bodyWorldPoint = render.mapping.worldToView({
-                        x: matterPart.position.x,
-                        y: matterPart.position.y
-                    });
-                    let bodyViewOffset = {x: domPart.offsetWidth / 2, y: domPart.offsetHeight / 2};
-                    domPart.style.position = 'absolute';
-                    domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${bodyWorldPoint.y - bodyViewOffset.y}px)`;
-                    domPart.style.transform += `rotate(${matterBody.angle}rad)`;
+                        const bodyWorldPoint = render.mapping.worldToView({
+                            x: matterPart.position.x,
+                            y: matterPart.position.y,
+                        });
+                        const bodyViewOffset = {
+                            x: domPart.offsetWidth / 2,
+                            y: domPart.offsetHeight / 2,
+                        };
+                        domPart.style.position = "absolute";
+                        domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
+                            bodyWorldPoint.y - bodyViewOffset.y
+                        }px)`;
+                        domPart.style.transform += `rotate(${matterBody.angle}rad)`;
+                    }
                 }
-
             }
         }
     };
 
     return RenderDom;
-};
+}

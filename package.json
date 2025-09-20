@@ -1,7 +1,8 @@
 {
   "name": "matter-dom-plugin",
   "description": "A plugin to apply matter.js's physics to DOM elements",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "type": "module",
   "main": "src/matter-dom-plugin.js",
   "license": "MIT",
   "homepage": "https://github.com/elopezga/matter-dom-plugin",
@@ -17,13 +18,13 @@
     "dom"
   ],
   "scripts": {
-    "lint": "eslint --fix --ext .js .",
-    "test:lint": "eslint --ext .js ."
+    "lint": "prettier --write \"src/**/*.js\"",
+    "lint:check": "prettier --check \"src/**/*.js\""
   },
   "devDependencies": {
-    "eslint": "^7.5.0"
+    "prettier": "^3.6.2"
   },
   "dependencies": {
-    "matter-js": "^0.14.2"
+    "matter-js": "^0.17.0"
   }
 }
