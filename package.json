@@ -20,6 +20,6 @@
   "scripts": {},
   "devDependencies": {},
   "dependencies": {
-    "matter-js": "^0.14.2"
+    "matter-js": "0.17.1"
   }
 }

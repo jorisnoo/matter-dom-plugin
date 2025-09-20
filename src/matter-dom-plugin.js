@@ -1,3 +1,4 @@
+// Import Matter.js (CommonJS module)
 import Matter from 'matter-js';
 import RenderDom from './render/RenderDom.js';
 import DomBody from './body/DomBody.js';
@@ -8,7 +9,7 @@ import Engine from './core/Engine.js';
 const MatterDomPlugin = {
     name: 'matter-dom-plugin',
     version: '1.1.0',
-    for: 'matter-js@^0.14.2',
+    for: 'matter-js@^0.17.1',
     install: function (matter) {
         MatterDomPlugin.installRenderDom(matter);
         MatterDomPlugin.installDomBody(matter);
@@ -39,6 +40,10 @@ const MatterDomPlugin = {
 };
 
 
-Matter.Plugin.register(MatterDomPlugin);
+// Only register if Matter.Plugin is available
+if (Matter && Matter.Plugin) {
+    Matter.Plugin.register(MatterDomPlugin);
+}
 
 export { MatterDomPlugin };
+export default MatterDomPlugin;
