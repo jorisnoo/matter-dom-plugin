@@ -1,8 +1,5 @@
 export default function (Matter) {
-    const Common = Matter.Common;
-    const Composite = Matter.Composite;
-    const Events = Matter.Events;
-    const Render = Matter.Render;
+    const { Common, Composite, Events, Render } = Matter;
 
     const RenderDom = {};
 
@@ -37,26 +34,18 @@ export default function (Matter) {
             x: render.mapping.WORLD.width / 2,
             y: render.mapping.WORLD.height / 2,
         };
-        render.mapping.viewToWorld = function (value) {
+
+        const ratio = render.mapping.ratioMultiplier;
+
+        const scaleMapping = (fn) => (value) => {
             if (typeof value === "object" && value !== null) {
-                return {
-                    x: render.mapping.ratioMultiplier * value.x,
-                    y: render.mapping.ratioMultiplier * value.y,
-                };
-            } else {
-                return render.mapping.ratioMultiplier * value;
+                return { x: fn(value.x), y: fn(value.y) };
             }
+            return fn(value);
         };
-        render.mapping.worldToView = function (value) {
-            if (typeof value === "object" && value !== null) {
-                return {
-                    x: value.x / render.mapping.ratioMultiplier,
-                    y: value.y / render.mapping.ratioMultiplier,
-                };
-            } else {
-                return value / render.mapping.ratioMultiplier;
-            }
-        };
+
+        render.mapping.viewToWorld = scaleMapping((v) => ratio * v);
+        render.mapping.worldToView = scaleMapping((v) => v / ratio);
 
         const debugElement = document.querySelector("#debug");
 
@@ -96,10 +85,9 @@ export default function (Matter) {
     };
 
     RenderDom.run = function (render) {
-        const self = RenderDom;
         (function loop() {
             render.frameRequestId = requestAnimationFrame(loop);
-            self.world(render);
+            RenderDom.world(render);
         })();
     };
 

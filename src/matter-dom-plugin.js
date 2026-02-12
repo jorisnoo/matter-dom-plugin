@@ -7,18 +7,9 @@ const MatterDomPlugin = {
     name: "matter-dom-plugin",
     version: "1.1.0",
     for: "matter-js@>=0.20.0",
-    install: function (matter) {
-        MatterDomPlugin.installRenderDom(matter);
-        MatterDomPlugin.installDomBodies(matter);
-        MatterDomPlugin.installDomMouseConstraint(matter);
-    },
-    installRenderDom: function (matter) {
+    install(matter) {
         matter.RenderDom = RenderDom(matter);
-    },
-    installDomBodies: function (matter) {
         matter.DomBodies = DomBodies(matter);
-    },
-    installDomMouseConstraint: function (matter) {
         matter.DomMouseConstraint = DomMouseConstraint(matter);
     },
 };

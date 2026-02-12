@@ -1,8 +1,5 @@
 export default function (Matter) {
-    const Body = Matter.Body;
-    const Bodies = Matter.Bodies;
-    const Vertices = Matter.Vertices;
-    const Common = Matter.Common;
+    const { Body, Bodies, Vertices, Common } = Matter;
 
     const DomBodies = {};
 
@@ -13,18 +10,13 @@ export default function (Matter) {
                 render: null,
             },
         };
-        options = options || {};
+        options ??= {};
         options = Common.extend(defaults, options);
 
-        const render = options.Dom.render;
-        const element = options.Dom.element;
-        const dom = options.Dom;
-        delete options.Dom;
+        const { Dom: dom, chamfer, ...bodyOptions } = options;
+        const { render, element } = dom;
 
-        const positionInWorld = render.mapping.viewToWorld({
-            x: x,
-            y: y,
-        });
+        const positionInWorld = render.mapping.viewToWorld({ x, y });
 
         const elementDimensionsInWorld = render.mapping.viewToWorld({
             x: element.offsetWidth,
@@ -36,14 +28,13 @@ export default function (Matter) {
 
         const block = {
             label: "DOM Block Body",
-            position: { x: positionInWorld.x, y: positionInWorld.y },
+            position: positionInWorld,
             vertices: Vertices.fromPath(
                 `L 0 0 L ${w} 0 L ${w} ${h} L 0 ${h}`,
             ),
         };
 
-        if (options.chamfer) {
-            const chamfer = options.chamfer;
+        if (chamfer) {
             block.vertices = Vertices.chamfer(
                 block.vertices,
                 chamfer.radius,
@@ -51,12 +42,11 @@ export default function (Matter) {
                 chamfer.qualityMin,
                 chamfer.qualityMax,
             );
-            delete options.chamfer;
         }
 
         element.style.position = "absolute";
 
-        const body = Body.create(Common.extend({}, block, options));
+        const body = Body.create(Common.extend({}, block, bodyOptions));
         body.Dom = dom;
         body.Dom.halfWidth = element.offsetWidth / 2;
         body.Dom.halfHeight = element.offsetHeight / 2;
@@ -65,7 +55,7 @@ export default function (Matter) {
     };
 
     DomBodies.circle = function (x, y, radius, options, maxSides) {
-        options = options || {};
+        options ??= {};
 
         const circle = {
             label: "Circle Body",
@@ -89,13 +79,12 @@ export default function (Matter) {
     };
 
     DomBodies.polygon = function (x, y, sides, radius, options) {
-        options = options || {};
+        options ??= {};
 
-        const dom = options.Dom;
-        delete options.Dom;
+        const { Dom: dom, chamfer, ...bodyOptions } = options;
 
         if (sides < 3) {
-            return Bodies.circle(x, y, radius, options);
+            return Bodies.circle(x, y, radius, bodyOptions);
         }
 
         const theta = (2 * Math.PI) / sides;
@@ -112,12 +101,11 @@ export default function (Matter) {
 
         const polygon = {
             label: "Polygon Body",
-            position: { x: x, y: y },
+            position: { x, y },
             vertices: Vertices.fromPath(path),
         };
 
-        if (options.chamfer) {
-            const chamfer = options.chamfer;
+        if (chamfer) {
             polygon.vertices = Vertices.chamfer(
                 polygon.vertices,
                 chamfer.radius,
@@ -125,10 +113,9 @@ export default function (Matter) {
                 chamfer.qualityMin,
                 chamfer.qualityMax,
             );
-            delete options.chamfer;
         }
 
-        const body = Body.create(Common.extend({}, polygon, options));
+        const body = Body.create(Common.extend({}, polygon, bodyOptions));
 
         if (dom) {
             body.Dom = dom;

@@ -1,28 +1,16 @@
 export default function (Matter) {
-    const Sleeping = Matter.Sleeping;
-    const Mouse = Matter.Mouse;
-    const Events = Matter.Events;
-    const Constraint = Matter.Constraint;
-    const Composite = Matter.Composite;
-    const Common = Matter.Common;
-    const Bounds = Matter.Bounds;
+    const { Sleeping, Mouse, Events, Constraint, Composite, Common, Bounds } = Matter;
 
     const DomMouseConstraint = {};
 
     const _triggerEvents = function (mouseConstraint) {
-        const mouse = mouseConstraint.mouse;
+        const { mouse } = mouseConstraint;
         const mouseEvents = mouse.sourceEvents;
 
-        if (mouseEvents.mousemove) {
-            Events.trigger(mouseConstraint, "mousemove", { mouse: mouse });
-        }
-
-        if (mouseEvents.mousedown) {
-            Events.trigger(mouseConstraint, "mousedown", { mouse: mouse });
-        }
-
-        if (mouseEvents.mouseup) {
-            Events.trigger(mouseConstraint, "mouseup", { mouse: mouse });
+        for (const event of ["mousemove", "mousedown", "mouseup"]) {
+            if (mouseEvents[event]) {
+                Events.trigger(mouseConstraint, event, { mouse });
+            }
         }
 
         // reset the mouse state ready for the next step
@@ -30,13 +18,12 @@ export default function (Matter) {
     };
 
     DomMouseConstraint.create = function (engine, options) {
-        let mouse =
-            (engine ? engine.mouse : null) || (options ? options.mouse : null);
+        let mouse = engine?.mouse ?? options?.mouse;
 
         if (!mouse) {
-            if (engine && engine.render && engine.render.canvas) {
+            if (engine?.render?.canvas) {
                 mouse = Mouse.create(engine.render.canvas);
-            } else if (options && options.element) {
+            } else if (options?.element) {
                 mouse = Mouse.create(options.element);
             } else {
                 mouse = Mouse.create();
@@ -61,10 +48,10 @@ export default function (Matter) {
 
         const defaults = {
             type: "mouseConstraint",
-            mouse: mouse,
+            mouse,
             element: null,
             body: null,
-            constraint: constraint,
+            constraint,
             collisionFilter: {
                 category: 0x0001,
                 mask: 0xffffffff,
@@ -84,9 +71,9 @@ export default function (Matter) {
     };
 
     DomMouseConstraint.update = function (mouseConstraint, bodies) {
-        const mouse = mouseConstraint.mouse;
-        const constraint = mouseConstraint.constraint;
-        const body = mouseConstraint.body;
+        const { mouse } = mouseConstraint;
+        const { constraint } = mouseConstraint;
+        const { body } = mouseConstraint;
 
         let mousePositionInWorld;
         if (mouse.button === 0) {
@@ -106,7 +93,7 @@ export default function (Matter) {
                             constraint.angleB = candidate.angle;
 
                             Events.trigger(mouseConstraint, "startdrag", {
-                                mouse: mouse,
+                                mouse,
                                 body: candidate,
                             });
 
@@ -127,8 +114,8 @@ export default function (Matter) {
 
             if (body) {
                 Events.trigger(mouseConstraint, "enddrag", {
-                    mouse: mouse,
-                    body: body,
+                    mouse,
+                    body,
                 });
             }
         }
