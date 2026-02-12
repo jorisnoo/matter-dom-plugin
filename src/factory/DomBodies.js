@@ -18,6 +18,9 @@ export default function (Matter) {
 
         const render = options.Dom.render;
         const element = options.Dom.element;
+        const dom = options.Dom;
+        delete options.Dom;
+
         const positionInWorld = render.mapping.viewToWorld({
             x: x,
             y: y,
@@ -53,7 +56,10 @@ export default function (Matter) {
 
         element.style.position = "absolute";
 
-        return Body.create(Common.extend({}, block, options));
+        const body = Body.create(Common.extend({}, block, options));
+        body.Dom = dom;
+
+        return body;
     };
 
     DomBodies.circle = function (x, y, radius, options, maxSides) {
@@ -82,6 +88,9 @@ export default function (Matter) {
 
     DomBodies.polygon = function (x, y, sides, radius, options) {
         options = options || {};
+
+        const dom = options.Dom;
+        delete options.Dom;
 
         if (sides < 3) {
             return Bodies.circle(x, y, radius, options);
@@ -117,7 +126,13 @@ export default function (Matter) {
             delete options.chamfer;
         }
 
-        return Body.create(Common.extend({}, polygon, options));
+        const body = Body.create(Common.extend({}, polygon, options));
+
+        if (dom) {
+            body.Dom = dom;
+        }
+
+        return body;
     };
 
     return DomBodies;

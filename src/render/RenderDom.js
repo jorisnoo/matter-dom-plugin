@@ -17,6 +17,7 @@ export default function (Matter) {
         const engine = options.engine;
 
         const render = Common.extend(defaults, options);
+        render.engine = options.engine; // Preserve reference (Common.extend deep-clones objects)
 
         render.mapping = {};
         render.mapping.ratioMultiplier = 1 / 6; // VIEW is base ratio. Mapping to World.
