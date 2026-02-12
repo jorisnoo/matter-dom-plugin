@@ -105,6 +105,9 @@ export default function (Matter) {
 
     RenderDom.stop = function (render) {
         cancelAnimationFrame(render.frameRequestId);
+        if (render.DebugRender) {
+            Render.stop(render.DebugRender);
+        }
     };
 
     RenderDom.world = function (render) {
@@ -126,11 +129,10 @@ export default function (Matter) {
             const matterBody = matterBodies[i];
 
             if (matterBody.Dom && matterBody.Dom.element) {
-                const domElement = matterBody.Dom.element;
-                const x = matterBody.position.x * ratio - domElement.offsetWidth / 2;
-                const y = matterBody.position.y * ratio - domElement.offsetHeight / 2;
+                const x = matterBody.position.x * ratio - matterBody.Dom.halfWidth;
+                const y = matterBody.position.y * ratio - matterBody.Dom.halfHeight;
 
-                domElement.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
+                matterBody.Dom.element.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
             } else {
                 for (
                     let k = matterBody.parts.length > 1 ? 1 : 0;
@@ -140,11 +142,10 @@ export default function (Matter) {
                     const matterPart = matterBody.parts[k];
 
                     if (matterPart.Dom && matterPart.Dom.element) {
-                        const domPart = matterPart.Dom.element;
-                        const x = matterPart.position.x * ratio - domPart.offsetWidth / 2;
-                        const y = matterPart.position.y * ratio - domPart.offsetHeight / 2;
+                        const x = matterPart.position.x * ratio - matterPart.Dom.halfWidth;
+                        const y = matterPart.position.y * ratio - matterPart.Dom.halfHeight;
 
-                        domPart.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
+                        matterPart.Dom.element.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
                     }
                 }
             }

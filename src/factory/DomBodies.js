@@ -58,6 +58,8 @@ export default function (Matter) {
 
         const body = Body.create(Common.extend({}, block, options));
         body.Dom = dom;
+        body.Dom.halfWidth = element.offsetWidth / 2;
+        body.Dom.halfHeight = element.offsetHeight / 2;
 
         return body;
     };
