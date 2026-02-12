@@ -36,6 +36,8 @@ export default function (Matter) {
         };
 
         const ratio = render.mapping.ratioMultiplier;
+        render.mapping.ratioInverse = 1 / ratio;
+        const ratioInverse = render.mapping.ratioInverse;
 
         const scaleMapping = (fn) => (value) => {
             if (typeof value === "object" && value !== null) {
@@ -45,7 +47,7 @@ export default function (Matter) {
         };
 
         render.mapping.viewToWorld = scaleMapping((v) => ratio * v);
-        render.mapping.worldToView = scaleMapping((v) => v / ratio);
+        render.mapping.worldToView = scaleMapping((v) => v * ratioInverse);
 
         const debugElement = document.querySelector("#debug");
 
@@ -111,7 +113,7 @@ export default function (Matter) {
      */
     RenderDom.bodies = function (render) {
         const matterBodies = Composite.allBodies(render.engine.world);
-        const ratio = 1 / render.mapping.ratioMultiplier;
+        const ratio = render.mapping.ratioInverse;
 
         for (let i = 0; i < matterBodies.length; i++) {
             const matterBody = matterBodies[i];
@@ -121,20 +123,21 @@ export default function (Matter) {
                 const y = matterBody.position.y * ratio - matterBody.Dom.halfHeight;
 
                 matterBody.Dom.element.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
-            } else {
-                for (
-                    let k = matterBody.parts.length > 1 ? 1 : 0;
-                    k < matterBody.parts.length;
-                    k++
-                ) {
-                    const matterPart = matterBody.parts[k];
+                continue;
+            }
 
-                    if (matterPart.Dom && matterPart.Dom.element) {
-                        const x = matterPart.position.x * ratio - matterPart.Dom.halfWidth;
-                        const y = matterPart.position.y * ratio - matterPart.Dom.halfHeight;
+            for (
+                let k = matterBody.parts.length > 1 ? 1 : 0;
+                k < matterBody.parts.length;
+                k++
+            ) {
+                const matterPart = matterBody.parts[k];
 
-                        matterPart.Dom.element.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
-                    }
+                if (matterPart.Dom && matterPart.Dom.element) {
+                    const x = matterPart.position.x * ratio - matterPart.Dom.halfWidth;
+                    const y = matterPart.position.y * ratio - matterPart.Dom.halfHeight;
+
+                    matterPart.Dom.element.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
                 }
             }
         }

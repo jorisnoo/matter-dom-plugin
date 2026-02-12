@@ -61,32 +61,42 @@ export default function (Matter) {
 
         const domMouseConstraint = Common.extend(defaults, options);
 
-        Events.on(engine, "beforeUpdate", function () {
+        const beforeUpdateHandler = function () {
             const allBodies = Composite.allBodies(engine.world);
             DomMouseConstraint.update(domMouseConstraint, allBodies);
             _triggerEvents(domMouseConstraint);
-        });
+        };
+
+        domMouseConstraint._engine = engine;
+        domMouseConstraint._beforeUpdateHandler = beforeUpdateHandler;
+
+        Events.on(engine, "beforeUpdate", beforeUpdateHandler);
 
         return domMouseConstraint;
     };
 
     DomMouseConstraint.update = function (mouseConstraint, bodies) {
-        const { mouse } = mouseConstraint;
-        const { constraint } = mouseConstraint;
-        const { body } = mouseConstraint;
+        const { mouse, constraint, body } = mouseConstraint;
 
-        let mousePositionInWorld;
         if (mouse.button === 0) {
             if (!constraint.bodyB) {
+                let viewToWorld = mouseConstraint._viewToWorld;
+                let mousePositionInWorld;
+
                 for (let i = 0; i < bodies.length; i++) {
                     const candidate = bodies[i];
 
                     if (candidate.Dom !== undefined) {
-                        mousePositionInWorld =
-                            candidate.Dom.render.mapping.viewToWorld(mouse.position);
-                        if (
-                            Bounds.contains(candidate.bounds, mousePositionInWorld)
-                        ) {
+                        if (!viewToWorld) {
+                            viewToWorld = candidate.Dom.render.mapping.viewToWorld;
+                            mouseConstraint._viewToWorld = viewToWorld;
+                        }
+
+                        if (!mousePositionInWorld) {
+                            mousePositionInWorld = viewToWorld(mouse.position);
+                        }
+
+                        if (Bounds.contains(candidate.bounds, mousePositionInWorld)) {
                             constraint.pointA = mousePositionInWorld;
                             constraint.bodyB = mouseConstraint.body = candidate;
                             constraint.pointB = { x: 0, y: 0 };
@@ -103,10 +113,9 @@ export default function (Matter) {
                 }
             } else {
                 Sleeping.set(constraint.bodyB, false);
-                mousePositionInWorld = constraint.bodyB.Dom.render.mapping.viewToWorld(
-                    mouse.position,
-                );
-                constraint.pointA = mousePositionInWorld;
+                const viewToWorld = mouseConstraint._viewToWorld
+                    ?? constraint.bodyB.Dom.render.mapping.viewToWorld;
+                constraint.pointA = viewToWorld(mouse.position);
             }
         } else {
             constraint.bodyB = mouseConstraint.body = null;
@@ -119,6 +128,10 @@ export default function (Matter) {
                 });
             }
         }
+    };
+
+    DomMouseConstraint.destroy = function (mouseConstraint) {
+        Events.off(mouseConstraint._engine, "beforeUpdate", mouseConstraint._beforeUpdateHandler);
     };
 
     return DomMouseConstraint;

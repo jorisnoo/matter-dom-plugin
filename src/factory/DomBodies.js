@@ -3,6 +3,16 @@ export default function (Matter) {
 
     const DomBodies = {};
 
+    const applyChamfer = (vertices, chamfer) => {
+        return Vertices.chamfer(
+            vertices,
+            chamfer.radius,
+            chamfer.quality,
+            chamfer.qualityMin,
+            chamfer.qualityMax,
+        );
+    };
+
     DomBodies.block = function (x, y, options) {
         const defaults = {
             Dom: {
@@ -11,9 +21,8 @@ export default function (Matter) {
             },
         };
         options ??= {};
-        options = Common.extend(defaults, options);
 
-        const { Dom: dom, chamfer, ...bodyOptions } = options;
+        const { Dom: dom, chamfer, ...bodyOptions } = Common.extend(defaults, options);
         const { render, element } = dom;
 
         const positionInWorld = render.mapping.viewToWorld({ x, y });
@@ -35,13 +44,7 @@ export default function (Matter) {
         };
 
         if (chamfer) {
-            block.vertices = Vertices.chamfer(
-                block.vertices,
-                chamfer.radius,
-                chamfer.quality,
-                chamfer.qualityMin,
-                chamfer.qualityMax,
-            );
+            block.vertices = applyChamfer(block.vertices, chamfer);
         }
 
         element.style.position = "absolute";
@@ -99,26 +102,30 @@ export default function (Matter) {
             path += `L ${xx.toFixed(3)} ${yy.toFixed(3)} `;
         }
 
+        const position = dom?.render
+            ? dom.render.mapping.viewToWorld({ x, y })
+            : { x, y };
+
         const polygon = {
             label: "Polygon Body",
-            position: { x, y },
+            position,
             vertices: Vertices.fromPath(path),
         };
 
         if (chamfer) {
-            polygon.vertices = Vertices.chamfer(
-                polygon.vertices,
-                chamfer.radius,
-                chamfer.quality,
-                chamfer.qualityMin,
-                chamfer.qualityMax,
-            );
+            polygon.vertices = applyChamfer(polygon.vertices, chamfer);
         }
 
         const body = Body.create(Common.extend({}, polygon, bodyOptions));
 
         if (dom) {
             body.Dom = dom;
+
+            if (dom.element && dom.render) {
+                dom.element.style.position = "absolute";
+                body.Dom.halfWidth = dom.element.offsetWidth / 2;
+                body.Dom.halfHeight = dom.element.offsetHeight / 2;
+            }
         }
 
         return body;
