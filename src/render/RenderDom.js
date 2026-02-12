@@ -10,7 +10,6 @@ export default function (Matter) {
         const defaults = {
             engine: null,
             element: window,
-            controller: RenderDom,
             frameRequestId: null,
             options: {},
         };
@@ -108,48 +107,30 @@ export default function (Matter) {
     };
 
     RenderDom.world = function (render) {
-        const engine = render.engine;
-        const domBodies = document.querySelectorAll("[matter]");
+        Events.trigger(render, "beforeRender", {
+            timestamp: render.engine.timing.timestamp,
+        });
 
-        const event = {
-            timestamp: engine.timing.timestamp,
-        };
-
-        Events.trigger(render, "beforeRender", event);
-
-        RenderDom.bodies(render, domBodies);
+        RenderDom.bodies(render);
     };
 
     /**
      * Map Dom view elements position to matter world bodys position
      */
     RenderDom.bodies = function (render) {
-        const engine = render.engine;
-        const world = engine.world;
-        const matterBodies = Composite.allBodies(world);
+        const matterBodies = Composite.allBodies(render.engine.world);
+        const ratio = 1 / render.mapping.ratioMultiplier;
 
         for (let i = 0; i < matterBodies.length; i++) {
             const matterBody = matterBodies[i];
 
-            // Check if the body itself has Dom property (for simple bodies)
             if (matterBody.Dom && matterBody.Dom.element) {
                 const domElement = matterBody.Dom.element;
+                const x = matterBody.position.x * ratio - domElement.offsetWidth / 2;
+                const y = matterBody.position.y * ratio - domElement.offsetHeight / 2;
 
-                const bodyWorldPoint = render.mapping.worldToView({
-                    x: matterBody.position.x,
-                    y: matterBody.position.y,
-                });
-                const bodyViewOffset = {
-                    x: domElement.offsetWidth / 2,
-                    y: domElement.offsetHeight / 2,
-                };
-                domElement.style.position = "absolute";
-                domElement.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
-                    bodyWorldPoint.y - bodyViewOffset.y
-                }px)`;
-                domElement.style.transform += `rotate(${matterBody.angle}rad)`;
+                domElement.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
             } else {
-                // Check parts for composite bodies
                 for (
                     let k = matterBody.parts.length > 1 ? 1 : 0;
                     k < matterBody.parts.length;
@@ -159,20 +140,10 @@ export default function (Matter) {
 
                     if (matterPart.Dom && matterPart.Dom.element) {
                         const domPart = matterPart.Dom.element;
+                        const x = matterPart.position.x * ratio - domPart.offsetWidth / 2;
+                        const y = matterPart.position.y * ratio - domPart.offsetHeight / 2;
 
-                        const bodyWorldPoint = render.mapping.worldToView({
-                            x: matterPart.position.x,
-                            y: matterPart.position.y,
-                        });
-                        const bodyViewOffset = {
-                            x: domPart.offsetWidth / 2,
-                            y: domPart.offsetHeight / 2,
-                        };
-                        domPart.style.position = "absolute";
-                        domPart.style.transform = `translate(${bodyWorldPoint.x - bodyViewOffset.x}px, ${
-                            bodyWorldPoint.y - bodyViewOffset.y
-                        }px)`;
-                        domPart.style.transform += `rotate(${matterBody.angle}rad)`;
+                        domPart.style.transform = `translate(${x}px, ${y}px) rotate(${matterBody.angle}rad)`;
                     }
                 }
             }

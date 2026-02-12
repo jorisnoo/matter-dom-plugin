@@ -1,102 +1,10 @@
 export default function (Matter) {
+    const Body = Matter.Body;
     const Bodies = Matter.Bodies;
-    const DomBody = Matter.DomBody;
     const Vertices = Matter.Vertices;
     const Common = Matter.Common;
-    const Composite = Matter.Composite;
 
     const DomBodies = {};
-
-    DomBodies.create = function (options) {
-        const bodyType = options.bodyType; // Required
-        const el = options.el; // Required
-        const render = options.render; // Required
-        const position = options.position; // Required
-
-        delete options.bodyType;
-        delete options.render;
-        delete options.position;
-
-        options.domRenderer = render;
-
-        let worldBody = null;
-        const domBody = document.querySelector(el);
-
-        const positionInWorld = render.mapping.viewToWorld({
-            x: position.x,
-            y: position.y,
-        });
-
-        if (bodyType === "block") {
-            const blockDimensionsInWorld = render.mapping.viewToWorld({
-                x: domBody.offsetWidth,
-                y: domBody.offsetHeight,
-            });
-
-            worldBody = DomBodies.OGblock(
-                positionInWorld.x,
-                positionInWorld.y,
-                blockDimensionsInWorld.x,
-                blockDimensionsInWorld.y,
-                options,
-            );
-        } else if (bodyType === "circle") {
-            const circleRadiusInWorld = render.mapping.viewToWorld(
-                domBody.offsetWidth / 2,
-            );
-
-            worldBody = DomBodies.circle(
-                positionInWorld.x,
-                positionInWorld.y,
-                circleRadiusInWorld,
-                options,
-            );
-        }
-
-        if (worldBody) {
-            // Set the Dom property to link the body with its DOM element
-            worldBody.Dom = {
-                element: domBody,
-                render: render,
-            };
-
-            Composite.add(render.engine.world, [worldBody]);
-        }
-
-        return worldBody;
-    };
-
-    DomBodies.OGblock = function (x, y, width, height, options) {
-        options = options || {};
-
-        const block = {
-            label: "Block Body",
-            position: { x: x, y: y },
-            vertices: Vertices.fromPath(
-                "L 0 0 L " +
-                    width +
-                    " 0 L " +
-                    width +
-                    " " +
-                    height +
-                    " L 0 " +
-                    height,
-            ),
-        };
-
-        if (options.chamfer) {
-            const chamfer = options.chamfer;
-            block.vertices = Vertices.chamfer(
-                block.vertices,
-                chamfer.radius,
-                chamfer.quality,
-                chamfer.qualityMin,
-                chamfer.qualityMax,
-            );
-            delete options.chamfer;
-        }
-        return DomBody.create(Common.extend({}, block, options));
-    };
 
     DomBodies.block = function (x, y, options) {
         const defaults = {
@@ -120,18 +28,14 @@ export default function (Matter) {
             y: element.offsetHeight,
         });
 
+        const w = elementDimensionsInWorld.x;
+        const h = elementDimensionsInWorld.y;
+
         const block = {
             label: "DOM Block Body",
             position: { x: positionInWorld.x, y: positionInWorld.y },
             vertices: Vertices.fromPath(
-                "L 0 0 L " +
-                    elementDimensionsInWorld.x +
-                    " 0 L " +
-                    elementDimensionsInWorld.x +
-                    " " +
-                    elementDimensionsInWorld.y +
-                    " L 0 " +
-                    elementDimensionsInWorld.y,
+                `L 0 0 L ${w} 0 L ${w} ${h} L 0 ${h}`,
             ),
         };
 
@@ -147,7 +51,9 @@ export default function (Matter) {
             delete options.chamfer;
         }
 
-        return DomBody.create(Common.extend({}, block, options));
+        element.style.position = "absolute";
+
+        return Body.create(Common.extend({}, block, options));
     };
 
     DomBodies.circle = function (x, y, radius, options, maxSides) {
@@ -158,11 +64,9 @@ export default function (Matter) {
             circleRadius: radius,
         };
 
-        // approximate circles with polygons until true circles implemented in SAT
         maxSides = maxSides || 25;
         let sides = Math.ceil(Math.max(10, Math.min(maxSides, radius)));
 
-        // optimisation: always use even number of sides (half the number of unique axes)
         if (sides % 2 === 1) {
             sides += 1;
         }
@@ -192,7 +96,7 @@ export default function (Matter) {
             const xx = Math.cos(angle) * radius;
             const yy = Math.sin(angle) * radius;
 
-            path += "L " + xx.toFixed(3) + " " + yy.toFixed(3) + " ";
+            path += `L ${xx.toFixed(3)} ${yy.toFixed(3)} `;
         }
 
         const polygon = {
@@ -213,7 +117,7 @@ export default function (Matter) {
             delete options.chamfer;
         }
 
-        return DomBody.create(Common.extend({}, polygon, options));
+        return Body.create(Common.extend({}, polygon, options));
     };
 
     return DomBodies;

@@ -86,28 +86,28 @@ export default function (Matter) {
     DomMouseConstraint.update = function (mouseConstraint, bodies) {
         const mouse = mouseConstraint.mouse;
         const constraint = mouseConstraint.constraint;
-        let body = mouseConstraint.body;
+        const body = mouseConstraint.body;
 
         let mousePositionInWorld;
         if (mouse.button === 0) {
             if (!constraint.bodyB) {
                 for (let i = 0; i < bodies.length; i++) {
-                    body = bodies[i];
+                    const candidate = bodies[i];
 
-                    if (body.Dom !== undefined) {
+                    if (candidate.Dom !== undefined) {
                         mousePositionInWorld =
-                            body.Dom.render.mapping.viewToWorld(mouse.position);
+                            candidate.Dom.render.mapping.viewToWorld(mouse.position);
                         if (
-                            Bounds.contains(body.bounds, mousePositionInWorld)
+                            Bounds.contains(candidate.bounds, mousePositionInWorld)
                         ) {
                             constraint.pointA = mousePositionInWorld;
-                            constraint.bodyB = mouseConstraint.body = body;
+                            constraint.bodyB = mouseConstraint.body = candidate;
                             constraint.pointB = { x: 0, y: 0 };
-                            constraint.angleB = body.angle;
+                            constraint.angleB = candidate.angle;
 
                             Events.trigger(mouseConstraint, "startdrag", {
                                 mouse: mouse,
-                                body: body,
+                                body: candidate,
                             });
 
                             break;
@@ -116,7 +116,7 @@ export default function (Matter) {
                 }
             } else {
                 Sleeping.set(constraint.bodyB, false);
-                mousePositionInWorld = body.Dom.render.mapping.viewToWorld(
+                mousePositionInWorld = constraint.bodyB.Dom.render.mapping.viewToWorld(
                     mouse.position,
                 );
                 constraint.pointA = mousePositionInWorld;
