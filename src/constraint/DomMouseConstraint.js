@@ -33,6 +33,11 @@ export default function (Matter) {
             }
         }
 
+        // Extract constraint options before Common.extend to prevent
+        // the Constraint class instance from being replaced by a plain object.
+        const constraintOptions = options?.constraint ?? {};
+        const { constraint: _, ...restOptions } = options ?? {};
+
         const constraint = Constraint.create({
             label: "Mouse Constraint",
             pointA: mouse.position,
@@ -44,6 +49,7 @@ export default function (Matter) {
                 strokeStyle: "#90EE90",
                 lineWidth: 3,
             },
+            ...constraintOptions,
         });
 
         const defaults = {
@@ -59,7 +65,7 @@ export default function (Matter) {
             },
         };
 
-        const domMouseConstraint = Common.extend(defaults, options);
+        const domMouseConstraint = Common.extend(defaults, restOptions);
 
         const beforeUpdateHandler = function () {
             const allBodies = Composite.allBodies(engine.world);
