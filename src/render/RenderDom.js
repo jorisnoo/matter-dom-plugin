@@ -66,7 +66,6 @@ export default function (Matter) {
                     wireframes: true,
                     showSleeping: true,
                     showDebug: false,
-                    showBroadphase: false,
                     showBounds: false,
                     showVelocity: false,
                     showCollisions: false,

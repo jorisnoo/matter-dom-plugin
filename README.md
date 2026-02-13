@@ -4,6 +4,8 @@
 
 The matter-dom-plugin brings DOM rendering to the Matter.js physics engine. Objects are created in an HTML-first declarative way so that application logic and view are separate.
 
+This is a fork of [elopezga/matter-dom-plugin](https://github.com/elopezga/matter-dom-plugin), modernized with ES module exports, simplified internals, and additional fixes.
+
 ## Features
 
 - DOM renderer with view-to-world coordinate mapping

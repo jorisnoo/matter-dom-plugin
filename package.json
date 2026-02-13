@@ -25,6 +25,6 @@
     "prettier": "^3.6.2"
   },
   "dependencies": {
-    "matter-js": "^0.20.0"
+    "matter-js": "^1.0.0"
   }
 }

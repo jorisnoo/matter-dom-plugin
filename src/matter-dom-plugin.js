@@ -6,7 +6,7 @@ import DomMouseConstraint from "./constraint/DomMouseConstraint.js";
 const MatterDomPlugin = {
     name: "matter-dom-plugin",
     version: "1.1.0",
-    for: "matter-js@>=0.20.0",
+    for: "matter-js@^1.0.0",
     install(matter) {
         matter.RenderDom = RenderDom(matter);
         matter.DomBodies = DomBodies(matter);
