@@ -1,10 +1,12 @@
 # matter-dom-plugin
 
-> A plugin for [matter.js](https://github.com/liabru/matter-js/)
+> DOM rendering for [matter.js](https://github.com/liabru/matter-js/)
 
 The matter-dom-plugin brings DOM rendering to the Matter.js physics engine. Objects are created in an HTML-first declarative way so that application logic and view are separate.
 
 This is a fork of [elopezga/matter-dom-plugin](https://github.com/elopezga/matter-dom-plugin), modernized with ES module exports, simplified internals, and additional fixes.
+
+Since v2 the modules are plain ES module exports instead of a `Matter.use()` plugin, so bundlers can tree-shake the unused parts of matter-js (notably its canvas renderer). The render loop also skips DOM writes for bodies that haven't moved, so a settled or sleeping world costs no style recalculation.
 
 ## Features
 
@@ -12,28 +14,13 @@ This is a fork of [elopezga/matter-dom-plugin](https://github.com/elopezga/matte
 - DOM bodies (`block`, `circle`, `polygon`) from declarative HTML
 - Mouse constraint for DOM elements with drag support
 - Compound body rendering
-- Compatible with Matter.js >= 0.20.0
+- TypeScript definitions
+- Requires the [jorisnoo/matter-js](https://github.com/jorisnoo/matter-js) fork (>= 1.0.0) as a peer dependency
 
 ## Install
 
 ```
 npm install matter-dom-plugin
-```
-
-See matter.js on [using plugins](https://github.com/liabru/matter-js/wiki/Using-plugins)
-
-## Running Tests
-
-Due to browser security restrictions with ES6 modules, you need to run a local server:
-
-```bash
-# Using npm (Node.js server)
-npm run serve
-# Then open http://localhost:8080
-
-# Or using Python
-./serve.sh
-# Then open http://localhost:8000
 ```
 
 ## Usage
@@ -51,7 +38,6 @@ npm run serve
   </style>
 </head>
 <body>
-  <div id="debug"></div>
   <div id="block"></div>
 </body>
 ```
@@ -59,12 +45,8 @@ npm run serve
 2. Initialize the Matter.js world
 
 ```javascript
-import Matter from 'matter-js';
-import { MatterDomPlugin } from 'matter-dom-plugin';
-
-Matter.use(MatterDomPlugin);
-
-const { Engine, Runner, RenderDom, DomBodies, DomMouseConstraint, Mouse, World } = Matter;
+import { Engine, Runner, Composite, Mouse } from 'matter-js';
+import { RenderDom, DomBodies, DomMouseConstraint } from 'matter-dom-plugin';
 
 // Engine and renderer
 const engine = Engine.create();
@@ -81,7 +63,7 @@ const block = DomBodies.block(100, 100, {
     element: document.querySelector('#block'),
   },
 });
-World.add(engine.world, block);
+Composite.add(engine.world, block);
 
 // Mouse drag constraint
 const mouse = Mouse.create(document.body);
@@ -89,7 +71,7 @@ const mouseConstraint = DomMouseConstraint.create(engine, {
   mouse: mouse,
   constraint: { stiffness: 0.1 },
 });
-World.add(engine.world, mouseConstraint);
+Composite.add(engine.world, mouseConstraint);
 ```
 
 ## API
@@ -100,7 +82,7 @@ World.add(engine.world, mouseConstraint);
 |---|---|
 | `RenderDom.create(options)` | Create a DOM renderer. Accepts `{ engine }`. Sets up view/world coordinate mapping. |
 | `RenderDom.run(render)` | Start the render loop. |
-| `RenderDom.stop(render)` | Stop the render loop and debug renderer if present. |
+| `RenderDom.stop(render)` | Stop the render loop. |
 
 The renderer exposes coordinate mapping on `render.mapping`:
 
@@ -108,6 +90,8 @@ The renderer exposes coordinate mapping on `render.mapping`:
 - `render.mapping.worldToView(value)` &mdash; convert physics world coordinates to screen coordinates
 
 Both accept a scalar number or an `{ x, y }` object.
+
+The loop only writes `style.transform` when a body has moved by more than a sub-pixel threshold since the last write, so combining it with `enableSleeping: true` on the engine makes a settled world essentially free.
 
 ### DomBodies
 
@@ -153,6 +137,16 @@ Events.on(mc, 'enddrag', ({ body }) => console.log('released', body));
 DomMouseConstraint.destroy(mc);
 ```
 
-## Debug Renderer
+## Migrating from v1
 
-Add a `<div id="debug"></div>` to your page to enable the built-in Matter.js wireframe renderer alongside DOM rendering.
+v1 registered itself through the matter.js plugin system:
+
+```javascript
+// v1
+import Matter from 'matter-js';
+import { MatterDomPlugin } from 'matter-dom-plugin';
+Matter.use(MatterDomPlugin);
+const { RenderDom, DomBodies, DomMouseConstraint } = Matter;
+```
+
+In v2, import the modules directly (see Usage above). The `#debug` wireframe renderer was removed together with the plugin's dependency on `Matter.Render`; if you need it, create a `Matter.Render` yourself alongside `RenderDom`.

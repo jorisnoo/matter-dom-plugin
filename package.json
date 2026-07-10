@@ -1,9 +1,17 @@
 {
   "name": "matter-dom-plugin",
-  "description": "A plugin to apply matter.js's physics to DOM elements",
-  "version": "1.1.0",
+  "description": "Apply matter.js physics to DOM elements",
+  "version": "2.0.0",
   "type": "module",
   "main": "src/matter-dom-plugin.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/matter-dom-plugin.js"
+    }
+  },
+  "sideEffects": false,
   "license": "MIT",
   "homepage": "https://github.com/elopezga/matter-dom-plugin",
   "author": "Edgar Lopez-Garcia",
@@ -22,9 +30,10 @@
     "lint:check": "prettier --check \"src/**/*.js\""
   },
   "devDependencies": {
+    "matter-js": "github:jorisnoo/matter-js",
     "prettier": "^3.6.2"
   },
-  "dependencies": {
-    "matter-js": "^1.0.0"
+  "peerDependencies": {
+    "matter-js": ">=1.0.0"
   }
 }
