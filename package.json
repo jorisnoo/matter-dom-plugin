@@ -35,5 +35,10 @@
   },
   "peerDependencies": {
     "matter-js": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "matter-js": {
+      "optional": true
+    }
   }
 }
