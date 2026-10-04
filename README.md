@@ -150,3 +150,7 @@ const { RenderDom, DomBodies, DomMouseConstraint } = Matter;
 ```
 
 In v2, import the modules directly (see Usage above). The `#debug` wireframe renderer was removed together with the plugin's dependency on `Matter.Render`; if you need it, create a `Matter.Render` yourself alongside `RenderDom`.
+
+## Maintainer releases
+
+See [RELEASING.md](RELEASING.md) for versioning, changelog entries and the release command.
