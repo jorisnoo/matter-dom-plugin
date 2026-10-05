@@ -48,6 +48,30 @@ test("block collider uses dimensions after absolute positioning", () => {
     assert.equal(el.style.transform, "translate(81px, 90px) rotate(0rad)");
 });
 
+test("rounded blocks stay convex and draggable when the radius exceeds their size", () => {
+    for (const [width, height] of [
+        [155, 62.2],
+        [183, 73.3],
+        [210, 77.8],
+    ]) {
+        for (const radius of [6.5, [6.5, 12, 6.5, 20], undefined]) {
+            const { engine, render } = scene();
+            const body = block(render, 120, 120, {
+                Dom: { render, element: element(width, height) },
+                chamfer: { radius },
+                angle: Math.PI / 12,
+                collisionFilter: { category: 2 },
+            });
+            const mc = mouseConstraint(engine);
+
+            assert.equal(Vertices.isConvex(body.vertices), true);
+            DomMouseConstraint.update(mc, [body]);
+            assert.equal(mc.body, body);
+            DomMouseConstraint.destroy(mc);
+        }
+    }
+});
+
 test("polygon fallback preserves DOM rendering and coordinate conversion", () => {
     const { render } = scene();
     const dom = { render, element: element() };

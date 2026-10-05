@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-10-05
+
+### Fixed
+
+- Keep rounded DOM blocks draggable when their requested corner radius is larger than the block allows. Clamp scalar and per-corner radii to half the shorter side so small pill-shaped blocks retain valid convex colliders and pass mouse hit tests.
+
 ## [2.0.1] - 2026-10-05
 
 ### Fixed

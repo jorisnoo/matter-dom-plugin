@@ -34,7 +34,16 @@ DomBodies.block = function (x, y, options = {}) {
     let vertices = Vertices.fromPath(`L 0 0 L ${w} 0 L ${w} ${h} L 0 ${h}`);
 
     if (chamfer) {
-        vertices = applyChamfer(vertices, chamfer);
+        // Oversized corners overlap and make the block non-convex, so the
+        // mouse constraint's polygon hit test rejects it.
+        const maxRadius = Math.min(w, h) / 2;
+        const radius = chamfer.radius ?? 8;
+        vertices = applyChamfer(vertices, {
+            ...chamfer,
+            radius: Array.isArray(radius)
+                ? radius.map((value) => Math.min(value, maxRadius))
+                : Math.min(radius, maxRadius),
+        });
     }
 
     const body = Body.create({
