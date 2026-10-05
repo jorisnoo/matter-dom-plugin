@@ -1,7 +1,7 @@
 {
   "name": "matter-dom-plugin",
   "description": "Apply matter.js physics to DOM elements",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "main": "src/matter-dom-plugin.js",
   "types": "types/index.d.ts",
@@ -26,8 +26,9 @@
     "dom"
   ],
   "scripts": {
-    "lint": "prettier --write \"src/**/*.js\"",
-    "lint:check": "prettier --check \"src/**/*.js\""
+    "test": "node --test",
+    "lint": "prettier --write \"src/**/*.js\" \"tests/**/*.js\"",
+    "lint:check": "prettier --check \"src/**/*.js\" \"tests/**/*.js\""
   },
   "devDependencies": {
     "matter-js": "github:jorisnoo/matter-js",

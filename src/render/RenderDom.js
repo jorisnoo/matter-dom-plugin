@@ -36,6 +36,10 @@ RenderDom.create = function (options) {
 };
 
 RenderDom.run = function (render) {
+    if (render.frameRequestId !== null) {
+        return;
+    }
+
     (function loop() {
         render.frameRequestId = requestAnimationFrame(loop);
         RenderDom.bodies(render);
@@ -70,7 +74,7 @@ RenderDom.bodies = function (render) {
             const matterPart = matterBody.parts[k];
 
             if (matterPart.Dom && matterPart.Dom.element) {
-                RenderDom.updateElement(matterPart, matterBody.angle, ratio);
+                RenderDom.updateElement(matterPart, matterPart.angle, ratio);
             }
         }
     }

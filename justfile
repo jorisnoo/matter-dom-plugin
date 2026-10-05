@@ -20,3 +20,4 @@ lint-check:
 
 # Run all checks
 check: lint-check
+    npm test

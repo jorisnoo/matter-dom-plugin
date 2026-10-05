@@ -1,6 +1,16 @@
-import { Body, Bodies, Vertices } from "matter-js";
+import { Body, Vertices } from "matter-js";
 
 const DomBodies = {};
+
+const prepareDom = (dom) => {
+    if (dom?.element && dom.render) {
+        dom.element.style.position = "absolute";
+        dom.element.style.left = "0px";
+        dom.element.style.top = "0px";
+        dom.halfWidth = dom.element.offsetWidth / 2;
+        dom.halfHeight = dom.element.offsetHeight / 2;
+    }
+};
 
 const applyChamfer = (vertices, chamfer) => {
     return Vertices.chamfer(
@@ -14,19 +24,18 @@ const applyChamfer = (vertices, chamfer) => {
 
 DomBodies.block = function (x, y, options = {}) {
     const { Dom: dom, chamfer, ...bodyOptions } = options;
-    const { render, element } = dom;
+    const { render } = dom;
 
+    prepareDom(dom);
     const position = render.mapping.viewToWorld({ x, y });
-    const w = render.mapping.viewToWorld(element.offsetWidth);
-    const h = render.mapping.viewToWorld(element.offsetHeight);
+    const w = render.mapping.viewToWorld(dom.halfWidth * 2);
+    const h = render.mapping.viewToWorld(dom.halfHeight * 2);
 
     let vertices = Vertices.fromPath(`L 0 0 L ${w} 0 L ${w} ${h} L 0 ${h}`);
 
     if (chamfer) {
         vertices = applyChamfer(vertices, chamfer);
     }
-
-    element.style.position = "absolute";
 
     const body = Body.create({
         label: "DOM Block Body",
@@ -36,8 +45,6 @@ DomBodies.block = function (x, y, options = {}) {
     });
 
     body.Dom = dom;
-    body.Dom.halfWidth = element.offsetWidth / 2;
-    body.Dom.halfHeight = element.offsetHeight / 2;
 
     return body;
 };
@@ -58,11 +65,12 @@ DomBodies.circle = function (x, y, radius, options = {}, maxSides) {
 };
 
 DomBodies.polygon = function (x, y, sides, radius, options = {}) {
-    const { Dom: dom, chamfer, ...bodyOptions } = options;
-
     if (sides < 3) {
-        return Bodies.circle(x, y, radius, bodyOptions);
+        return DomBodies.circle(x, y, radius, options);
     }
+
+    const { Dom: dom, chamfer, ...bodyOptions } = options;
+    prepareDom(dom);
 
     const theta = (2 * Math.PI) / sides;
     let path = "";
@@ -95,12 +103,6 @@ DomBodies.polygon = function (x, y, sides, radius, options = {}) {
 
     if (dom) {
         body.Dom = dom;
-
-        if (dom.element && dom.render) {
-            dom.element.style.position = "absolute";
-            body.Dom.halfWidth = dom.element.offsetWidth / 2;
-            body.Dom.halfHeight = dom.element.offsetHeight / 2;
-        }
     }
 
     return body;

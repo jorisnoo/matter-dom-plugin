@@ -3,9 +3,11 @@ import {
     Common,
     Composite,
     Constraint,
+    Detector,
     Events,
     Mouse,
     Sleeping,
+    Vertices,
 } from "matter-js";
 
 const DomMouseConstraint = {};
@@ -93,46 +95,66 @@ DomMouseConstraint.update = function (mouseConstraint, bodies) {
 
     if (mouse.button === 0) {
         if (!constraint.bodyB) {
-            let viewToWorld = mouseConstraint._viewToWorld;
-            let mousePositionInWorld;
-
             for (let i = 0; i < bodies.length; i++) {
                 const candidate = bodies[i];
+                const parts =
+                    candidate.parts.length > 1
+                        ? candidate.parts.slice(1)
+                        : candidate.parts;
+                const dom =
+                    candidate.Dom ??
+                    parts.find((part) => part.Dom?.render)?.Dom;
 
-                if (candidate.Dom !== undefined) {
-                    if (!viewToWorld) {
-                        viewToWorld = candidate.Dom.render.mapping.viewToWorld;
-                        mouseConstraint._viewToWorld = viewToWorld;
-                    }
-
-                    if (!mousePositionInWorld) {
-                        mousePositionInWorld = viewToWorld(mouse.position);
-                    }
-
-                    if (
-                        Bounds.contains(candidate.bounds, mousePositionInWorld)
-                    ) {
-                        constraint.pointA = mousePositionInWorld;
-                        constraint.bodyB = mouseConstraint.body = candidate;
-                        constraint.pointB = { x: 0, y: 0 };
-                        constraint.angleB = candidate.angle;
-
-                        Sleeping.set(candidate, false);
-
-                        Events.trigger(mouseConstraint, "startdrag", {
-                            mouse,
-                            body: candidate,
-                        });
-
-                        break;
-                    }
+                if (
+                    !dom?.render ||
+                    !Detector.canCollide(
+                        candidate.collisionFilter,
+                        mouseConstraint.collisionFilter,
+                    )
+                ) {
+                    continue;
                 }
+
+                const viewToWorld = dom.render.mapping.viewToWorld;
+                const mousePositionInWorld = viewToWorld(mouse.position);
+
+                if (
+                    !Bounds.contains(candidate.bounds, mousePositionInWorld) ||
+                    !parts.some(
+                        (part) =>
+                            (candidate.Dom?.element || part.Dom?.element) &&
+                            Vertices.contains(
+                                part.vertices,
+                                mousePositionInWorld,
+                            ),
+                    )
+                ) {
+                    continue;
+                }
+
+                mouseConstraint._viewToWorld = viewToWorld;
+                constraint.pointA = mousePositionInWorld;
+                constraint.bodyB = mouseConstraint.body = candidate;
+                constraint.pointB = { x: 0, y: 0 };
+                constraint.angleB = candidate.angle;
+
+                Sleeping.set(candidate, false);
+
+                Events.trigger(mouseConstraint, "startdrag", {
+                    mouse,
+                    body: candidate,
+                });
+
+                break;
             }
         } else {
             Sleeping.set(constraint.bodyB, false);
             const viewToWorld =
                 mouseConstraint._viewToWorld ??
-                constraint.bodyB.Dom.render.mapping.viewToWorld;
+                (
+                    constraint.bodyB.Dom ??
+                    constraint.bodyB.parts.find((part) => part.Dom?.render)?.Dom
+                ).render.mapping.viewToWorld;
             constraint.pointA = viewToWorld(mouse.position);
         }
     } else {

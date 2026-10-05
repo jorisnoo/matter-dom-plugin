@@ -20,7 +20,7 @@ Since v2 the modules are plain ES module exports instead of a `Matter.use()` plu
 ## Install
 
 ```
-npm install matter-dom-plugin
+npm install matter-dom-plugin github:jorisnoo/matter-js
 ```
 
 ## Usage
@@ -34,6 +34,9 @@ npm install matter-dom-plugin
       width: 100px;
       height: 100px;
       background-color: red;
+    }
+    body {
+      margin: 0;
     }
   </style>
 </head>
@@ -115,8 +118,10 @@ All methods accept a `Dom` property in options:
 
 When a `Dom` property with `render` and `element` is provided, the body factory will:
 - Convert `x`/`y` from view to world coordinates
-- Set `position: absolute` on the element
+- Set `position: absolute` and `top: 0; left: 0` on the element
 - Cache `halfWidth`/`halfHeight` for the render loop
+
+Coordinates are relative to the element's CSS containing block. Use a mouse attached to that same container, with no border or padding, and give nested scene containers `position: relative`. Body dimensions are measured after applying absolute positioning; use explicit CSS dimensions when an element should keep its size from normal document flow.
 
 ### DomMouseConstraint
 

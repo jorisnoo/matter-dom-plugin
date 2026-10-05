@@ -4,6 +4,7 @@ import type {
     Body,
     BodyOptions,
     ChamferOptions,
+    CollisionFilter,
     Constraint,
     ConstraintOptions,
     Engine,
@@ -59,8 +60,9 @@ export interface DomMouseConstraintInstance {
     type: 'mouseConstraint';
     mouse: Mouse;
     element: HTMLElement | null;
-    body: DomBody | null;
+    body: Body | null;
     constraint: Constraint;
+    collisionFilter: CollisionFilter;
 }
 
 export const RenderDom: {
