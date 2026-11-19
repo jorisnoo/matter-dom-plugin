@@ -35,6 +35,9 @@ export interface DomData {
     /** Cached by the body factories; used by the render loop */
     halfWidth: number;
     halfHeight: number;
+    /** CSS rotation pivot in px from the element's top-left corner */
+    originX?: number;
+    originY?: number;
 }
 
 export interface DomBody extends Body {
@@ -73,13 +76,17 @@ export const RenderDom: {
 };
 
 export const DomBodies: {
+    /** With Dom, x and y are scene-local CSS pixels; radii are always world units. */
     block(x: number, y: number, options: DomBodyOptions): DomBody;
     circle(x: number, y: number, radius: number, options: DomBodyOptions, maxSides?: number): DomBody;
+    circle(x: number, y: number, radius: number, options?: BodyOptions & { Dom?: never }, maxSides?: number): Body;
     polygon(x: number, y: number, sides: number, radius: number, options: DomBodyOptions): DomBody;
+    polygon(x: number, y: number, sides: number, radius: number, options?: BodyOptions & { Dom?: never }): Body;
 };
 
 export const DomMouseConstraint: {
     create(engine: Engine, options?: DomMouseConstraintOptions): DomMouseConstraintInstance;
     update(mouseConstraint: DomMouseConstraintInstance, bodies: Body[]): void;
+    /** Ends the drag, removes the constraint and detaches input listeners on an owned mouse. */
     destroy(mouseConstraint: DomMouseConstraintInstance): void;
 };

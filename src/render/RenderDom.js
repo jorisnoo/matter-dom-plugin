@@ -47,6 +47,9 @@ RenderDom.run = function (render) {
 };
 
 RenderDom.stop = function (render) {
+    if (render.frameRequestId === null) {
+        return;
+    }
     cancelAnimationFrame(render.frameRequestId);
     render.frameRequestId = null;
 };
@@ -82,8 +85,8 @@ RenderDom.bodies = function (render) {
 
 RenderDom.updateElement = function (part, angle, ratio) {
     const dom = part.Dom;
-    const x = part.position.x * ratio - dom.halfWidth;
-    const y = part.position.y * ratio - dom.halfHeight;
+    const x = part.position.x * ratio - (dom.originX ?? dom.halfWidth);
+    const y = part.position.y * ratio - (dom.originY ?? dom.halfHeight);
 
     if (
         dom.lastX !== undefined &&

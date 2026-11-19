@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-11-19
+
+### Fixed
+
+- Align DOM transforms and rotation pivots with asymmetric rounded colliders, clamp polygon chamfers and choose circle detail from the displayed radius.
+- Reject incomplete DOM options and elements with no measurable area before creating invalid physics bodies.
+- Release a held body and clean up owned mouse listeners when destroying a drag constraint.
+- Document exact GitHub installation tags, radius units and how to keep drag interactions scoped to the scene.
+
 ## [2.0.2] - 2026-10-05
 
 ### Fixed

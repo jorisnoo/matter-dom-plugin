@@ -19,6 +19,9 @@ const _triggerEvents = function (mouseConstraint) {
     for (const event of ["mousemove", "mousedown", "mouseup"]) {
         if (mouseEvents[event]) {
             Events.trigger(mouseConstraint, event, { mouse });
+            if (!mouseConstraint._engine) {
+                return;
+            }
         }
     }
 
@@ -26,26 +29,38 @@ const _triggerEvents = function (mouseConstraint) {
     Mouse.clearSourceEvents(mouse);
 };
 
-DomMouseConstraint.create = function (engine, options) {
-    let mouse = engine?.mouse ?? options?.mouse;
+const releaseBody = (mouseConstraint) => {
+    const { body, constraint, mouse } = mouseConstraint;
+    constraint.bodyB = mouseConstraint.body = null;
+    constraint.pointB = null;
+    mouseConstraint._viewToWorld = null;
+    if (body) {
+        Events.trigger(mouseConstraint, "enddrag", { mouse, body });
+    }
+};
+
+DomMouseConstraint.create = function (engine, options = {}) {
+    const {
+        mouse: suppliedMouse,
+        element,
+        constraint: constraintOptions,
+        ...restOptions
+    } = options;
+    let mouse = suppliedMouse ?? engine.mouse;
+    let ownedMouseElement = null;
 
     if (!mouse) {
-        if (engine?.render?.canvas) {
-            mouse = Mouse.create(engine.render.canvas);
-        } else if (options?.element) {
-            mouse = Mouse.create(options.element);
+        const target = element ?? engine.render?.canvas;
+        if (target) {
+            mouse = Mouse.create(target);
         } else {
             mouse = Mouse.create();
             Common.warn(
                 "MouseConstraint.create: options.mouse was undefined, options.element was undefined, may not function as expected",
             );
         }
+        ownedMouseElement = mouse.element;
     }
-
-    // Extract constraint options before Common.extend to prevent
-    // the Constraint class instance from being replaced by a plain object.
-    const constraintOptions = options?.constraint ?? {};
-    const { constraint: _, ...restOptions } = options ?? {};
 
     const constraint = Constraint.create({
         label: "Mouse Constraint",
@@ -64,7 +79,7 @@ DomMouseConstraint.create = function (engine, options) {
     const defaults = {
         type: "mouseConstraint",
         mouse,
-        element: null,
+        element: element ?? null,
         body: null,
         constraint,
         collisionFilter: {
@@ -77,13 +92,21 @@ DomMouseConstraint.create = function (engine, options) {
     const domMouseConstraint = Common.extend(defaults, restOptions);
 
     const beforeUpdateHandler = function () {
+        // An earlier beforeUpdate listener can destroy a constraint after
+        // Matter has captured the callbacks for the current tick.
+        if (!domMouseConstraint._engine) {
+            return;
+        }
         const allBodies = Composite.allBodies(engine.world);
         DomMouseConstraint.update(domMouseConstraint, allBodies);
-        _triggerEvents(domMouseConstraint);
+        if (domMouseConstraint._engine) {
+            _triggerEvents(domMouseConstraint);
+        }
     };
 
     domMouseConstraint._engine = engine;
     domMouseConstraint._beforeUpdateHandler = beforeUpdateHandler;
+    domMouseConstraint._ownedMouseElement = ownedMouseElement;
 
     Events.on(engine, "beforeUpdate", beforeUpdateHandler);
 
@@ -91,7 +114,7 @@ DomMouseConstraint.create = function (engine, options) {
 };
 
 DomMouseConstraint.update = function (mouseConstraint, bodies) {
-    const { mouse, constraint, body } = mouseConstraint;
+    const { mouse, constraint } = mouseConstraint;
 
     if (mouse.button === 0) {
         if (!constraint.bodyB) {
@@ -158,24 +181,35 @@ DomMouseConstraint.update = function (mouseConstraint, bodies) {
             constraint.pointA = viewToWorld(mouse.position);
         }
     } else {
-        constraint.bodyB = mouseConstraint.body = null;
-        constraint.pointB = null;
-
-        if (body) {
-            Events.trigger(mouseConstraint, "enddrag", {
-                mouse,
-                body,
-            });
-        }
+        releaseBody(mouseConstraint);
     }
 };
 
 DomMouseConstraint.destroy = function (mouseConstraint) {
-    Events.off(
-        mouseConstraint._engine,
-        "beforeUpdate",
-        mouseConstraint._beforeUpdateHandler,
-    );
+    const engine = mouseConstraint._engine;
+    if (!engine) {
+        return;
+    }
+    mouseConstraint._engine = null;
+    Events.off(engine, "beforeUpdate", mouseConstraint._beforeUpdateHandler);
+    mouseConstraint._beforeUpdateHandler = null;
+    Composite.remove(engine.world, mouseConstraint.constraint, true);
+
+    const element = mouseConstraint._ownedMouseElement;
+    if (element) {
+        const { mouse } = mouseConstraint;
+        element.removeEventListener("mousemove", mouse.mousemove);
+        element.removeEventListener("mousedown", mouse.mousedown);
+        element.removeEventListener("mouseup", mouse.mouseup);
+        element.removeEventListener("wheel", mouse.mousewheel);
+        element.removeEventListener("touchmove", mouse.mousemove);
+        element.removeEventListener("touchstart", mouse.mousedown);
+        element.removeEventListener("touchend", mouse.mouseup);
+        Mouse.clearSourceEvents(mouse);
+        mouseConstraint._ownedMouseElement = null;
+    }
+
+    releaseBody(mouseConstraint);
 };
 
 export default DomMouseConstraint;

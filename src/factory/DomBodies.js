@@ -3,19 +3,36 @@ import { Body, Vertices } from "matter-js";
 const DomBodies = {};
 
 const prepareDom = (dom) => {
-    if (dom?.element && dom.render) {
-        dom.element.style.position = "absolute";
-        dom.element.style.left = "0px";
-        dom.element.style.top = "0px";
-        dom.halfWidth = dom.element.offsetWidth / 2;
-        dom.halfHeight = dom.element.offsetHeight / 2;
+    if (!dom?.element?.style || !dom.render?.mapping) {
+        throw new TypeError("DomBodies requires Dom.element and Dom.render");
+    }
+    dom.element.style.position = "absolute";
+    dom.element.style.left = "0px";
+    dom.element.style.top = "0px";
+    dom.halfWidth = dom.element.offsetWidth / 2;
+    dom.halfHeight = dom.element.offsetHeight / 2;
+    if (!(dom.halfWidth > 0 && dom.halfHeight > 0)) {
+        throw new RangeError(
+            "Dom.element needs a non-zero width and height; set its CSS size or create the body after layout",
+        );
     }
 };
 
-const applyChamfer = (vertices, chamfer) => {
+// Body.create recentres the vertices on their centroid. The CSS rotation
+// pivot and translation must use that same point in the element's border box.
+const setOrigin = (dom, x, y) => {
+    dom.originX = x;
+    dom.originY = y;
+    dom.element.style.transformOrigin = `${x}px ${y}px`;
+    dom.lastX = undefined;
+};
+
+const applyChamfer = (vertices, chamfer, maxRadius) => {
+    const radius = chamfer.radius ?? 8;
+    const clamp = (value) => Math.max(0, Math.min(value, maxRadius));
     return Vertices.chamfer(
         vertices,
-        chamfer.radius,
+        Array.isArray(radius) ? radius.map(clamp) : clamp(radius),
         chamfer.quality,
         chamfer.qualityMin,
         chamfer.qualityMax,
@@ -24,9 +41,9 @@ const applyChamfer = (vertices, chamfer) => {
 
 DomBodies.block = function (x, y, options = {}) {
     const { Dom: dom, chamfer, ...bodyOptions } = options;
-    const { render } = dom;
 
     prepareDom(dom);
+    const { render } = dom;
     const position = render.mapping.viewToWorld({ x, y });
     const w = render.mapping.viewToWorld(dom.halfWidth * 2);
     const h = render.mapping.viewToWorld(dom.halfHeight * 2);
@@ -34,16 +51,11 @@ DomBodies.block = function (x, y, options = {}) {
     let vertices = Vertices.fromPath(`L 0 0 L ${w} 0 L ${w} ${h} L 0 ${h}`);
 
     if (chamfer) {
-        // Oversized corners overlap and make the block non-convex, so the
-        // mouse constraint's polygon hit test rejects it.
-        const maxRadius = Math.min(w, h) / 2;
-        const radius = chamfer.radius ?? 8;
-        vertices = applyChamfer(vertices, {
-            ...chamfer,
-            radius: Array.isArray(radius)
-                ? radius.map((value) => Math.min(value, maxRadius))
-                : Math.min(radius, maxRadius),
-        });
+        vertices = applyChamfer(vertices, chamfer, Math.min(w, h) / 2);
+        const origin = render.mapping.worldToView(Vertices.centre(vertices));
+        setOrigin(dom, origin.x, origin.y);
+    } else {
+        setOrigin(dom, dom.halfWidth, dom.halfHeight);
     }
 
     const body = Body.create({
@@ -60,7 +72,9 @@ DomBodies.block = function (x, y, options = {}) {
 
 DomBodies.circle = function (x, y, radius, options = {}, maxSides) {
     maxSides = maxSides || 25;
-    let sides = Math.ceil(Math.max(10, Math.min(maxSides, radius)));
+    const viewRadius =
+        radius * (options.Dom?.render?.mapping?.ratioInverse ?? 1);
+    let sides = Math.ceil(Math.max(10, Math.min(maxSides, viewRadius)));
 
     if (sides % 2 === 1) {
         sides += 1;
@@ -79,7 +93,9 @@ DomBodies.polygon = function (x, y, sides, radius, options = {}) {
     }
 
     const { Dom: dom, chamfer, ...bodyOptions } = options;
-    prepareDom(dom);
+    if (dom !== undefined) {
+        prepareDom(dom);
+    }
 
     const theta = (2 * Math.PI) / sides;
     let path = "";
@@ -93,14 +109,17 @@ DomBodies.polygon = function (x, y, sides, radius, options = {}) {
         path += `L ${xx.toFixed(3)} ${yy.toFixed(3)} `;
     }
 
-    const position = dom?.render
-        ? dom.render.mapping.viewToWorld({ x, y })
-        : { x, y };
+    const position = dom ? dom.render.mapping.viewToWorld({ x, y }) : { x, y };
 
     let vertices = Vertices.fromPath(path);
 
     if (chamfer) {
-        vertices = applyChamfer(vertices, chamfer);
+        vertices = applyChamfer(vertices, chamfer, radius * Math.sin(offset));
+        // Matter's sampled corner arcs can still form an inward turn where
+        // unequal radii meet. Its collision and picking APIs need a convex hull.
+        if (!Vertices.isConvex(vertices)) {
+            vertices = Vertices.hull(vertices);
+        }
     }
 
     const body = Body.create({
@@ -111,6 +130,13 @@ DomBodies.polygon = function (x, y, sides, radius, options = {}) {
     });
 
     if (dom) {
+        if (chamfer) {
+            const centre = Vertices.centre(vertices);
+            const offset = dom.render.mapping.worldToView(centre);
+            setOrigin(dom, dom.halfWidth + offset.x, dom.halfHeight + offset.y);
+        } else {
+            setOrigin(dom, dom.halfWidth, dom.halfHeight);
+        }
         body.Dom = dom;
     }
 

@@ -11,6 +11,7 @@ Release from `main` using an explicit version without a `v` prefix. `CHANGELOG.m
 Configured release checks:
 
 ```sh
+npm test
 npm run lint:check
 ```
 
@@ -35,7 +36,7 @@ Verify the workflow and published release/assets before reporting success. If a 
 
 ## Project details
 
-Update `package.json` to the exact release version before committing. Do not use `npm version` to create another tag or invoke legacy release hooks.
+Update `package.json` and both root version fields in `package-lock.json` before committing. Pin the development engine to a published `jorisnoo/matter-js` tag. Do not use `npm version` to create another tag or invoke legacy release hooks.
 
 These are maintained forks with upstream npm names. GitHub tagging does not publish to npm. Publish a registry package only when explicitly requested and after confirming the intended name/account; inspect `npm pack --dry-run` first.
 
