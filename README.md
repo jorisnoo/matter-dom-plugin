@@ -20,8 +20,10 @@ Since v2 the modules are plain ES module exports instead of a `Matter.use()` plu
 ## Install
 
 ```
-npm install matter-dom-plugin github:jorisnoo/matter-js
+npm install github:jorisnoo/matter-dom-plugin#2.0.3 github:jorisnoo/matter-js#1.0.2
 ```
+
+Both packages come from tagged GitHub forks. The registry's `matter-dom-plugin` package uses the older v1 API.
 
 ## Usage
 
@@ -30,6 +32,11 @@ npm install matter-dom-plugin github:jorisnoo/matter-js
 ```html
 <head>
   <style>
+    #scene {
+      position: relative;
+      height: 320px;
+      overflow: hidden;
+    }
     #block {
       width: 100px;
       height: 100px;
@@ -41,18 +48,19 @@ npm install matter-dom-plugin github:jorisnoo/matter-js
   </style>
 </head>
 <body>
-  <div id="block"></div>
+  <div id="scene"><div id="block"></div></div>
 </body>
 ```
 
 2. Initialize the Matter.js world
 
 ```javascript
-import { Engine, Runner, Composite, Mouse } from 'matter-js';
+import { Engine, Runner, Composite } from 'matter-js';
 import { RenderDom, DomBodies, DomMouseConstraint } from 'matter-dom-plugin';
 
 // Engine and renderer
 const engine = Engine.create();
+engine.gravity.y = 0; // Keep the block in the scene until it is dragged.
 const render = RenderDom.create({ engine });
 RenderDom.run(render);
 
@@ -68,14 +76,25 @@ const block = DomBodies.block(100, 100, {
 });
 Composite.add(engine.world, block);
 
-// Mouse drag constraint
-const mouse = Mouse.create(document.body);
+// Listen on the scene, not document.body.
 const mouseConstraint = DomMouseConstraint.create(engine, {
-  mouse: mouse,
+  element: document.querySelector('#scene'),
   constraint: { stiffness: 0.1 },
 });
 Composite.add(engine.world, mouseConstraint);
 ```
+
+To keep native wheel/trackpad scrolling inside the scene, detach Matter's wheel listener after creating the constraint. To keep native touch scrolling and taps on controls, also detach its three touch listeners; this disables touch dragging, but mouse dragging still works. Input outside the scene is unaffected.
+
+```javascript
+const { mouse } = mouseConstraint;
+mouse.element.removeEventListener('wheel', mouse.mousewheel);
+mouse.element.removeEventListener('touchstart', mouse.mousedown);
+mouse.element.removeEventListener('touchmove', mouse.mousemove);
+mouse.element.removeEventListener('touchend', mouse.mouseup);
+```
+
+When unmounting the scene, call `DomMouseConstraint.destroy(mouseConstraint)`, `RenderDom.stop(render)` and `Runner.stop(runner)`.
 
 ## API
 
@@ -112,34 +131,33 @@ All methods accept a `Dom` property in options:
     render: render,       // the RenderDom instance
     element: domElement,  // the HTML element to render
   },
-  chamfer: { radius: 10 }, // optional corner rounding
+  chamfer: { radius: render.mapping.viewToWorld(10) }, // 10 CSS px
 }
 ```
 
-When a `Dom` property with `render` and `element` is provided, the body factory will:
-- Convert `x`/`y` from view to world coordinates
-- Set `position: absolute` and `top: 0; left: 0` on the element
-- Cache `halfWidth`/`halfHeight` for the render loop
+`block` requires both `Dom.element` and `Dom.render`. For a circle or polygon without DOM rendering, omit `Dom` entirely; its `x` and `y` are then world coordinates.
 
-Coordinates are relative to the element's CSS containing block. Use a mouse attached to that same container, with no border or padding, and give nested scene containers `position: relative`. Body dimensions are measured after applying absolute positioning; use explicit CSS dimensions when an element should keep its size from normal document flow.
+With `Dom`, `x`/`y` place the collider's centre of mass in **CSS pixels**, relative to the element's CSS containing block. The factory sets `position: absolute; top: 0; left: 0` before measuring `offsetWidth` and `offsetHeight`. Create bodies after layout, when both dimensions are positive; give images and elements that depend on normal flow explicit CSS sizes if needed. Use a positioned scene with no border or padding as both the containing block and the mouse target.
+
+Circle and polygon `radius` and all `chamfer.radius` values are in **world units**, not CSS pixels. At the renderer's scale, 1 world unit = 6 CSS px: a circle of radius 5 fits a 60 × 60 px element (diameter = `12 * radius`). A polygon's radius is measured to its vertices. Use `render.mapping.viewToWorld(cssPixels)` for a radius specified in pixels. Rounded corners are limited by the collider size, and the renderer rotates the element around the collider's centroid.
 
 ### DomMouseConstraint
 
 | Method | Description |
 |---|---|
 | `DomMouseConstraint.create(engine, options)` | Create a mouse constraint for DOM bodies. Accepts `{ mouse, constraint, element }`. |
-| `DomMouseConstraint.destroy(mouseConstraint)` | Remove the `beforeUpdate` event listener from the engine. |
+| `DomMouseConstraint.destroy(mouseConstraint)` | End any drag, remove the engine listener and world constraint, and detach DOM listeners installed by `create`. A mouse supplied by the caller or engine is left attached. Safe to call twice. |
 
 Events: `startdrag`, `enddrag`, `mousemove`, `mousedown`, `mouseup`.
 
 ```javascript
-const mc = DomMouseConstraint.create(engine, { mouse });
+import { Events } from 'matter-js';
 
-Events.on(mc, 'startdrag', ({ body }) => console.log('dragging', body));
-Events.on(mc, 'enddrag', ({ body }) => console.log('released', body));
+Events.on(mouseConstraint, 'startdrag', ({ body }) => console.log('dragging', body));
+Events.on(mouseConstraint, 'enddrag', ({ body }) => console.log('released', body));
 
 // Cleanup
-DomMouseConstraint.destroy(mc);
+DomMouseConstraint.destroy(mouseConstraint);
 ```
 
 ## Migrating from v1
